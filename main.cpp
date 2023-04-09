@@ -11,8 +11,8 @@ class Date{
      int annee;
 
     public:
-     vector<int>v30={1,3,5,7,8,10,12};
-     vector<int> v31={4,6,9,11};
+     vector<int>v31={1,3,5,7,8,10,12};
+     vector<int> v30={4,6,9,11};
      string incrimenterDate();
      string afficherDate ();
      void setJour(int j);
@@ -49,6 +49,7 @@ void Date::setAnnee(int a)
 {
  annee=a;
 }
+
 string Date::incrimenterDate() {
     Date d = *this;
     if (mois != 12 && mois != 2 ) {
@@ -69,10 +70,13 @@ string Date::incrimenterDate() {
             else
                 cout<<"erreur de saisie "<<endl;
         }
-        else  {
+        else if(jour<31) {
             d.setJour(jour+1);
         }
+        else{
+            cout<<"Erreur de saisie"<<endl;
 
+        }
     }
 
     else if (mois==2){
@@ -92,19 +96,26 @@ string Date::incrimenterDate() {
                    cout<<"erreur de saisie "<<endl;
                 }
             }
-           else
+
+           else if (jour<29)
             d.setJour(jour+1);
+           else{
+            cout<<"Erreur de saisie"<<endl;
+
+            }
     }
    else{
-     if (jour==30){
+     if (jour==31){
             d.setMois(1);
             d.setJour(1);
             d.setAnnee(annee+1);}
-     else if (jour == 31){
-           cout<<"erreur de saisie "<<endl;
-     }
-    else
+
+    else if (jour<31)
         d.setJour(jour+1);
+    else {
+            cout<<"Erreur de saisie"<<endl;
+
+    }
    }
 
     string d1 = to_string(d.getJour()) + "/" + to_string(d.getMois()) + "/" + to_string(d.getAnnee());
@@ -131,7 +142,7 @@ string Date::incrimenterDate() {
 
 int main()
 {
-    Date d("29/2/2016");
+    Date d("32/12/2005");
     cout<<d.incrimenterDate() <<endl;
 
 
