@@ -50,7 +50,7 @@ void Date::setAnnee(int a)
  annee=a;
 }
 string Date::incrimenterDate() {
-    Date d = *this; // make a copy of the current object
+    Date d = *this; 
     if (mois != 12) {
         if (jour == 30) {
             if (find(v30.begin(),v30.end(),mois) != v30.end()) {
