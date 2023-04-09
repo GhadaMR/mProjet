@@ -50,8 +50,8 @@ void Date::setAnnee(int a)
  annee=a;
 }
 string Date::incrimenterDate() {
-    Date d = *this; 
-    if (mois != 12) {
+    Date d = *this;
+    if (mois != 12 && mois != 2 ) {
         if (jour == 30) {
             if (find(v30.begin(),v30.end(),mois) != v30.end()) {
                 d.setMois(mois+1);
@@ -66,6 +66,8 @@ string Date::incrimenterDate() {
                 d.setMois(mois+1);
                 d.setJour(1);
             }
+            else
+                cout<<"erreur de saisie "<<endl;
         }
         else  {
             d.setJour(jour+1);
@@ -74,7 +76,7 @@ string Date::incrimenterDate() {
     }
 
     else if (mois==2){
-            if(jour==28){
+            if(jour==28 ){
                 if (annee % 4 == 0 && annee % 100 != 0 || annee % 400 == 0)
                         d.setJour(29);
                 else{
@@ -82,15 +84,25 @@ string Date::incrimenterDate() {
                     d.setMois(3);
                 }
             }
-          else
+            else  if(jour==29 ){
+                if (annee % 4 == 0 && annee % 100 != 0 || annee % 400 == 0){
+                         d.setJour(1);
+                        d.setMois(3);}
+                else{
+                   cout<<"erreur de saisie "<<endl;
+                }
+            }
+           else
             d.setJour(jour+1);
     }
    else{
      if (jour==30){
             d.setMois(1);
             d.setJour(1);
-            d.setAnnee(annee+1);
-            }
+            d.setAnnee(annee+1);}
+     else if (jour == 31){
+           cout<<"erreur de saisie "<<endl;
+     }
     else
         d.setJour(jour+1);
    }
@@ -119,7 +131,7 @@ string Date::incrimenterDate() {
 
 int main()
 {
-    Date d("31/04/2022");
+    Date d("29/2/2016");
     cout<<d.incrimenterDate() <<endl;
 
 
