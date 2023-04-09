@@ -50,21 +50,29 @@ void Date::setAnnee(int a)
  annee=a;
 }
 string Date::incrimenterDate() {
-    Date d = *this; 
+    Date d = *this; // make a copy of the current object
     if (mois != 12) {
         if (jour == 30) {
             if (find(v30.begin(),v30.end(),mois) != v30.end()) {
                 d.setMois(mois+1);
                 d.setJour(1);
             }
-        }
-        else if (find(v31.begin(), v31.end(), mois) != v31.end()) {
+            else if (find(v31.begin(), v31.end(), mois) != v31.end()) {
             d.setJour(jour+1);
         }
-        else {
+        }
+        else if (jour == 31) {
+            if (find(v31.begin(), v31.end(), mois) != v31.end()) {
+                d.setMois(mois+1);
+                d.setJour(1);
+            }
+        }
+        else  {
             d.setJour(jour+1);
         }
+
     }
+
     else if (mois==2){
             if(jour==28){
                 if (annee % 4 == 0 && annee % 100 != 0 || annee % 400 == 0)
@@ -93,7 +101,7 @@ string Date::incrimenterDate() {
 }
 
 
-Date::Date(string d){
+ Date::Date(string d){
     istringstream ss(d);
     string j, m, a;
     getline(ss, j, '/');
@@ -111,7 +119,7 @@ Date::Date(string d){
 
 int main()
 {
-    Date d("30/12/2022");
+    Date d("31/04/2022");
     cout<<d.incrimenterDate() <<endl;
 
 
