@@ -114,7 +114,7 @@ Date::Date(string d){
 
 int main()
 {
-    Date d("28/2/2022");
+    Date d("1/2/2022");
     cout<<d.incrimenterDate(d) <<endl;
 
 
