@@ -1,28 +1,22 @@
-#include <bits/stdc++.h>
+#include <iostream>
 #include <ctime>
 #include <string>
-#include <vector>
 #include <sstream>
 using namespace std;
 class Date{
-
      int jour;
      int mois;
      int annee;
-
     public:
-     vector<int>v31={1,3,5,7,8,10,12};
-     vector<int> v30={4,6,9,11};
-     string incrimenterDate();
-     string afficherDate ();
-     void setJour(int j);
-     void setMois(int m);
-     void setAnnee(int a);
+     void incrimenterDate(Date& d);
+     void afficherDate();
+     void setJour();
+     void setMois();
+     void setAnnee();
      Date (string d);
      int getJour();
      int getMois();
      int getAnnee();
-
 };
 int Date::getJour()
 {
@@ -36,115 +30,84 @@ int Date::getAnnee()
 {
     return annee;
 }
-
-void Date::setMois(int m)
+void Date:: incrimenterDate(Date& d)
 {
- mois=m;
+    if (d.mois &&d.jour &&d.annee){
+    int limiteJour = 31;
+    if (d.mois == 2) {
+        if (d.annee % 4 == 0) {
+            limiteJour = 29;
+        } else {
+            limiteJour = 28;
+        }
+    } else if (d.mois == 4 || d.mois == 6 || d.mois == 9 || d.mois == 11) {
+        limiteJour = 30;
+    }
+    d.setJour();
+    if (d.jour > limiteJour) {
+        d.jour = 1;
+        d.setMois();
+    }
+    if (d.mois > 12) {
+        d.jour=1;
+        d.mois = 1;
+        d.setAnnee();
+    }
+    }
 }
-void Date::setJour(int j)
+void Date::setMois()
 {
- jour=j;
+ mois++;
 }
-void Date::setAnnee(int a)
+void Date::setJour()
 {
- annee=a;
+ jour++;
 }
-
-string Date::incrimenterDate() {
-    Date d = *this;
-    if (mois != 12 && mois != 2 ) {
-        if (jour == 30) {
-            if (find(v30.begin(),v30.end(),mois) != v30.end()) {
-                d.setMois(mois+1);
-                d.setJour(1);
-            }
-            else if (find(v31.begin(), v31.end(), mois) != v31.end()) {
-            d.setJour(jour+1);
-        }
-        }
-        else if (jour == 31) {
-            if (find(v31.begin(), v31.end(), mois) != v31.end()) {
-                d.setMois(mois+1);
-                d.setJour(1);
-            }
-            else
-                cout<<"erreur de saisie "<<endl;
-        }
-        else if(jour<31) {
-            d.setJour(jour+1);
-        }
-        else{
-            cout<<"Erreur de saisie"<<endl;
-
-        }
-    }
-
-    else if (mois==2){
-            if(jour==28 ){
-                if (annee % 4 == 0 && annee % 100 != 0 || annee % 400 == 0)
-                        d.setJour(29);
-                else{
-                    d.setJour(1);
-                    d.setMois(3);
-                }
-            }
-            else  if(jour==29 ){
-                if (annee % 4 == 0 && annee % 100 != 0 || annee % 400 == 0){
-                         d.setJour(1);
-                        d.setMois(3);}
-                else{
-                   cout<<"erreur de saisie "<<endl;
-                }
-            }
-
-           else if (jour<29)
-            d.setJour(jour+1);
-           else{
-            cout<<"Erreur de saisie"<<endl;
-
-            }
-    }
-   else{
-     if (jour==31){
-            d.setMois(1);
-            d.setJour(1);
-            d.setAnnee(annee+1);}
-
-    else if (jour<31)
-        d.setJour(jour+1);
-    else {
-            cout<<"Erreur de saisie"<<endl;
-
-    }
-   }
-
-    string d1 = to_string(d.getJour()) + "/" + to_string(d.getMois()) + "/" + to_string(d.getAnnee());
-
-    return d1;
+void Date::setAnnee()
+{
+ annee++;
 }
-
-
- Date::Date(string d){
+Date::Date(string d){
     istringstream ss(d);
     string j, m, a;
     getline(ss, j, '/');
     getline(ss, m, '/');
     getline(ss, a);
-    int jr = std::stoi(j);
-    int ms = std::stoi(m);
-    int an = std::stoi(a);
+    int jr = stoi(j);
+    int ms = stoi(m);
+    int an = stoi(a);
     jour=jr;
     mois=ms;
     annee=an;
-}
+    int limiteJour = 31;
+    if (mois == 2) {
+        if (annee % 4 == 0) {
+            limiteJour = 29;
+        } else {
+            limiteJour = 28;
+        }
+    } else if (mois == 4 || mois == 6 || mois == 9 || mois == 11) {
+        limiteJour = 30;
+    }
+    if (jour> limiteJour){
+        jour=00;
+        mois=00;
+        annee=0000;
 
+    }
+}
+void Date::afficherDate(){
+    cout<<jour<<"/"<<mois<<"/"<<annee<<endl;
+}
 
 
 int main()
 {
-    Date d("32/12/2005");
-    cout<<d.incrimenterDate() <<endl;
 
+    Date d("30/2/2022");
+    d.afficherDate();
+    d.incrimenterDate(d);
+    d.afficherDate();
 
     return 0;
 }
