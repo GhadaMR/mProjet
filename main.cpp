@@ -10,26 +10,9 @@ class Date{
     public:
      void incrimenterDate(Date& d);
      void afficherDate();
-     void setJour();
-     void setMois();
-     void setAnnee();
      Date (string d);
-     int getJour();
-     int getMois();
-     int getAnnee();
 };
-int Date::getJour()
-{
-    return jour;
-}
-int Date::getMois()
-{
-    return mois;
-}
-int Date::getAnnee()
-{
-    return annee;
-}
+
 void Date:: incrimenterDate(Date& d)
 {
     if (d.mois &&d.jour &&d.annee){
@@ -43,29 +26,17 @@ void Date:: incrimenterDate(Date& d)
     } else if (d.mois == 4 || d.mois == 6 || d.mois == 9 || d.mois == 11) {
         limiteJour = 30;
     }
-    d.setJour();
+    d.jour++;
     if (d.jour > limiteJour) {
         d.jour = 1;
-        d.setMois();
+        d.mois++;
     }
     if (d.mois > 12) {
         d.jour=1;
         d.mois = 1;
-        d.setAnnee();
+        d.annee++;
     }
     }
-}
-void Date::setMois()
-{
- mois++;
-}
-void Date::setJour()
-{
- jour++;
-}
-void Date::setAnnee()
-{
- annee++;
 }
 Date::Date(string d){
     istringstream ss(d);
@@ -104,7 +75,7 @@ void Date::afficherDate(){
 int main()
 {
 
-    Date d("30/2/2022");
+    Date d("31/7/2020");
     d.afficherDate();
     d.incrimenterDate(d);
     d.afficherDate();
