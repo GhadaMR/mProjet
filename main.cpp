@@ -8,48 +8,32 @@ class Date{
      int mois;
      int annee;
     public:
-     void incrimenterDate(Date& d);
-     void afficherDate();
-     Date (string d);
+     void incrementerDate();
+     Date (int j,int m,int a);
+     friend ostream& operator<<(ostream& flux, const Date& d);
+     friend istream& operator>>(istream& flux, Date& d);
+     bool operator==(const Date& d)const;
+     bool operator<(const Date& d)const;
 };
+class Test{
 
-void Date:: incrimenterDate(Date& d)
-{
-    if (d.mois &&d.jour &&d.annee){
-    int limiteJour = 31;
-    if (d.mois == 2) {
-        if (d.annee % 4 == 0) {
-            limiteJour = 29;
-        } else {
-            limiteJour = 28;
-        }
-    } else if (d.mois == 4 || d.mois == 6 || d.mois == 9 || d.mois == 11) {
-        limiteJour = 30;
-    }
-    d.jour++;
-    if (d.jour > limiteJour) {
-        d.jour = 1;
-        d.mois++;
-    }
-    if (d.mois > 12) {
-        d.jour=1;
-        d.mois = 1;
-        d.annee++;
-    }
-    }
+};
+ostream& operator<<( ostream& flux, const Date& d){
+    flux<<d.jour<<"/"<<d.mois<<"/"<<d.annee<<endl;
+    return flux;
 }
-Date::Date(string d){
-    istringstream ss(d);
-    string j, m, a;
-    getline(ss, j, '/');
-    getline(ss, m, '/');
-    getline(ss, a);
-    int jr = stoi(j);
-    int ms = stoi(m);
-    int an = stoi(a);
-    jour=jr;
-    mois=ms;
-    annee=an;
+istream& operator>>(istream& flux, Date& d){
+        flux>>d.jour>>d.mois>>d.annee;
+    return flux;
+}
+bool Date::operator==(const Date& d)const{
+   return (jour==d.jour &&mois==d.mois && annee==d.annee);
+   }
+bool Date::operator< (const Date& d)const{
+   return (d.annee<annee || (d.annee==annee && d.mois<mois) || (d.annee==annee && d.mois==mois && d.jour<jour));
+}
+void Date:: incrementerDate()
+{
     int limiteJour = 31;
     if (mois == 2) {
         if (annee % 4 == 0) {
@@ -60,25 +44,25 @@ Date::Date(string d){
     } else if (mois == 4 || mois == 6 || mois == 9 || mois == 11) {
         limiteJour = 30;
     }
-    if (jour> limiteJour){
-        jour=00;
-        mois=00;
-        annee=0000;
-
+    jour++;
+    if (jour > limiteJour) {
+        jour = 1;
+        mois++;
+    }
+    if (mois > 12) {
+        jour=1;
+        mois = 1;
+        annee++;
     }
 }
-void Date::afficherDate(){
-    cout<<jour<<"/"<<mois<<"/"<<annee<<endl;
-}
+Date::Date(int j,int m,int a):jour(j), mois(m),annee(a){}
+
 
 
 int main()
 {
-
-    Date d("31/7/2020");
-    d.afficherDate();
-    d.incrimenterDate(d);
-    d.afficherDate();
-
-    return 0;
+    Date d(31,7,2022);
+    d.incrementerDate();
+    cout << d << endl;
+    return 1;
 }
