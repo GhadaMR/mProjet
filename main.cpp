@@ -72,6 +72,8 @@ class PrixJournalier {
         PrixJournalier(Date d , string a , double p) : date(d), action(a), prix(p) {}
         friend istream& operator>>(istream& flux, PrixJournalier& pj) ;
         friend ostream& operator<<(ostream& flux, const PrixJournalier& pj) ;
+        friend class BourseVector;
+     
 };
 istream& operator>>(istream& flux, PrixJournalier& pj) {
             flux >> pj.date >> pj.action >> pj.prix;
@@ -117,9 +119,9 @@ public:
         vector<string> actions;
         for (int i; i<prixj.size();i++)
         {
-            if (prixj[i].getDate() == date)
+            if (prixj[i].date() == date)
             {
-                actions.push_back(prixj[i].getAction());
+                actions.push_back(prixj[i].action());
             }
         }
         return actions;
@@ -130,7 +132,7 @@ public:
         vector<PrixJournalier> prix_journaliers;
         for (int i; i<prixj.size();i++)
         {
-            if (prixj[i].getDate() == date)
+            if (prixj[i].date() == date)
             {
                 prix_journaliers.push_back(prixj[i]);
             }
