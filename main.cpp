@@ -16,9 +16,6 @@ class Date{
      friend istream& operator>>(istream& flux, Date& d);
      bool operator==(const Date& d)const;
      bool operator<(const Date& d)const;
-
-
-
 };
 ostream& operator<<( ostream& flux, const Date& d){
     flux<<d.jour<<"/"<<d.mois<<"/"<<d.annee<<endl;
@@ -70,7 +67,6 @@ class PrixJournalier {
         double prix;
     public:
         PrixJournalier(){};
-
         friend istream& operator>>(istream& flux, PrixJournalier& pj) ;
         friend ostream& operator<<(ostream& flux, const PrixJournalier& pj) ;
         friend class BourseVector;
@@ -96,18 +92,14 @@ class PersistancePrixJournaliers
             string entete;
             if(f.is_open()){
                 f>>entete;
-                
                 while(!f.eof()){
                     PrixJournalier pj;
                     f>>(pj);
                     historique.push_back(pj);
-                    nbLignes++;
-                    
-                    
+                    nbLignes++;    
                 }
             }
         return historique;
-
         }
 };
 
@@ -148,10 +140,26 @@ public:
 
 int main()
 {
-
-    Date d1(04,01,2010);
+    Date d1(31,7,2014);
+    Date d2(8,8,2014);
+    d1.incrementerDate();
     cout << d1 << endl;
-    
-    
+    Date d3;
+    cin>>d3;
+    cout << d3 << endl;
+    PrixJournalier pj1;
+    cin>>pj1;
+    cout<< pj1;
+    PrixJournalier pj2;
+    cin>>pj2;
+    cout<< pj2;
+    vector<PrixJournalier> historique = PersistancePrixJournaliers::lirePrixJournaliersDUnFichier("C:/Users/hp/Desktop/enit/S2/MP/prices_simple.csv");
+    BourseVector  bourse(historique);
+    vector<PrixJournalier> PrixJournaliersParDate= bourse.getPrixJournaliersParDate(d1);
+    for (int i; i<PrixJournaliersParDate.size();i++)
+              cout<<PrixJournaliersParDate[i];
+    vector<string> actionsDisponibles= bourse.getActionsDisponiblesParDate(d2);
+    for (int i; i<actionsDisponibles.size();i++)
+                cout<<actionsDisponibles[i];
     return 1;
 }
