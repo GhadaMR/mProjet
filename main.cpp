@@ -16,6 +16,10 @@ class Date{
      friend istream& operator>>(istream& flux, Date& d);
      bool operator==(const Date& d)const;
      bool operator<(const Date& d)const;
+     friend class BourseVector;
+     friend class Test;
+
+
 };
 ostream& operator<<( ostream& flux, const Date& d){
     flux<<d.jour<<"/"<<d.mois<<"/"<<d.annee<<endl;
@@ -57,9 +61,7 @@ void Date:: incrementerDate()
 Date::Date(int j,int m,int a):jour(j), mois(m),annee(a){}
 
 
-class Test{
 
-};
 
 
 class PrixJournalier {
@@ -73,14 +75,13 @@ class PrixJournalier {
         friend istream& operator>>(istream& flux, PrixJournalier& pj) ;
         friend ostream& operator<<(ostream& flux, const PrixJournalier& pj) ;
         friend class BourseVector;
-     
 };
 istream& operator>>(istream& flux, PrixJournalier& pj) {
             flux >> pj.date >> pj.action >> pj.prix;
             return flux;
         }
 ostream& operator<<(ostream& flux, const PrixJournalier& pj) {
-            flux <<"à la date: "<< pj.date << " l'action: " << pj.action << " au prix:  " << pj.prix;
+            flux << pj.date << pj.action<< pj.prix;
             return flux;
         }
 
@@ -90,7 +91,7 @@ class PersistancePrixJournaliers
     public:
         static vector<PrixJournalier> lirePrixJournaliersDUnFichier(string chemin){
             vector<PrixJournalier> historique;
-            ifstream f("C:\Users\hp\Desktop\enit\S2\MP");
+            ifstream f("C:\\Users\\Zhome\\Desktop\\prices_simple.csv");
             int nbLignes= 0;
             string entete;
             if(f.is_open()){
@@ -119,9 +120,9 @@ public:
         vector<string> actions;
         for (int i; i<prixj.size();i++)
         {
-            if (prixj[i].date() == date)
+            if (prixj[i].date == date)
             {
-                actions.push_back(prixj[i].action());
+                actions.push_back(prixj[i].action);
             }
         }
         return actions;
@@ -132,7 +133,7 @@ public:
         vector<PrixJournalier> prix_journaliers;
         for (int i; i<prixj.size();i++)
         {
-            if (prixj[i].date() == date)
+            if (prixj[i].date == date)
             {
                 prix_journaliers.push_back(prixj[i]);
             }
@@ -140,17 +141,37 @@ public:
         return prix_journaliers;
     }
 };
+class Test{
+    public:
+        bool VerifierDate(Date d);
+        bool VerifierPJ(PrixJournalier PJ);
 
+};
+bool Test::VerifierDate(Date d){
+    if (d.mois < 1 ||d.mois > 12)
+        return false;
+    else if (d.mois==4||d.mois==6||d.mois==9||d.mois==11) {
+        if (d.jour>30||d.jour<1)
+            return false;
+    }
+    else if (d.jour>31||d.jour<1)
+        return false;
+}
 
 int main()
 {
-    Date d1(31,7,2022);
-    d1.incrementerDate();
-    cout << d1 << endl;
+    Test t;
+    Date d1(32,7,2022);
+    if (t.VerifierDate(d1)){
+            d1.incrementerDate();
+            cout << d1 << endl;
+    }
+
     Date d2;
     cin>>d2;
     cout << d2 << endl;
-    PrixJournalier pj(d1,"action a",1332);
+    PrixJournalier pj(d1,"b",1332);
     cout<< pj;
     return 1;
 }
+
