@@ -16,8 +16,7 @@ class Date{
      friend istream& operator>>(istream& flux, Date& d);
      bool operator==(const Date& d)const;
      bool operator<(const Date& d)const;
-     friend class BourseVector;
-     friend class Test;
+
 
 
 };
@@ -71,17 +70,18 @@ class PrixJournalier {
         double prix;
     public:
         PrixJournalier(){};
-        PrixJournalier(Date d , string a , double p) : date(d), action(a), prix(p) {}
+
         friend istream& operator>>(istream& flux, PrixJournalier& pj) ;
         friend ostream& operator<<(ostream& flux, const PrixJournalier& pj) ;
         friend class BourseVector;
+
 };
 istream& operator>>(istream& flux, PrixJournalier& pj) {
             flux >> pj.date >> pj.action >> pj.prix;
             return flux;
         }
 ostream& operator<<(ostream& flux, const PrixJournalier& pj) {
-            flux << pj.date << pj.action<< pj.prix;
+            flux <<pj.date<<pj.action<<pj.prix;
             return flux;
         }
 
@@ -91,19 +91,23 @@ class PersistancePrixJournaliers
     public:
         static vector<PrixJournalier> lirePrixJournaliersDUnFichier(string chemin){
             vector<PrixJournalier> historique;
-            ifstream f("C:\\Users\\Zhome\\Desktop\\prices_simple.csv");
+            ifstream f( chemin );
             int nbLignes= 0;
             string entete;
             if(f.is_open()){
                 f>>entete;
+                
                 while(!f.eof()){
                     PrixJournalier pj;
                     f>>(pj);
                     historique.push_back(pj);
                     nbLignes++;
+                    
+                    
                 }
             }
-            return historique;
+        return historique;
+
         }
 };
 
@@ -141,37 +145,13 @@ public:
         return prix_journaliers;
     }
 };
-class Test{
-    public:
-        bool VerifierDate(Date d);
-        bool VerifierPJ(PrixJournalier PJ);
-
-};
-bool Test::VerifierDate(Date d){
-    if (d.mois < 1 ||d.mois > 12)
-        return false;
-    else if (d.mois==4||d.mois==6||d.mois==9||d.mois==11) {
-        if (d.jour>30||d.jour<1)
-            return false;
-    }
-    else if (d.jour>31||d.jour<1)
-        return false;
-}
 
 int main()
 {
-    Test t;
-    Date d1(32,7,2022);
-    if (t.VerifierDate(d1)){
-            d1.incrementerDate();
-            cout << d1 << endl;
-    }
 
-    Date d2;
-    cin>>d2;
-    cout << d2 << endl;
-    PrixJournalier pj(d1,"b",1332);
-    cout<< pj;
+    Date d1(04,01,2010);
+    cout << d1 << endl;
+    
+    
     return 1;
 }
-
