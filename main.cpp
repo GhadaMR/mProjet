@@ -22,26 +22,18 @@ ostream& operator<<( ostream& flux, const Date& d){
     return flux;
 }
 istream& operator>>(istream& flux, Date& d){
-        string line;
-        ifstream myfile("C:\\Users\\hp\\Desktop\\enit\\S2\\MP\\prices_simple.txt");
-        string tab[100];
-        int i = 0;
-        if (myfile.is_open()) {
-          while (getline(myfile,line)) {
-            tab[i] = line;
-            i++;
-          }
-          myfile.close();
-        }
-        flux.getline(tab, 100, '/');
-        int jour=atoi(tab);
-        flux>>jour;
-        flux.getline(tab, 100, '/');
-        int mois=atoi(tab);
-        flux>>mois;
-        flux.getline(tab, 100, '/');
-        int annee=atoi(tab);
-        flux>>annee;
+    char tab[100];
+    flux.getline(tab, 100, '/');
+    int jour = atoi(tab);
+
+    flux.getline(tab, 100, '/');
+    int mois = atoi(tab);
+
+    flux.getline(tab, 100, ';');
+    int annee = atoi(tab);
+
+    d = Date(jour, mois, annee);
+    flux.ignore();
     return flux;
 }
 bool Date::operator==(const Date& d)const{
@@ -170,8 +162,11 @@ class BourseVector: public Bourse
 
 int main()
 {
-    Date d1(31,7,2014);
-    Date d2(8,8,2014);
+    Date d1;
+    cin>> d1;
+    cout<<d1;
+    Date d2;
+    cin>>d2;
     d1.incrementerDate();
     cout << d1 << endl;
     Date d3;
@@ -183,12 +178,12 @@ int main()
     PrixJournalier pj2;
     cin>>pj2;
     cout<< pj2;
-    vector<PrixJournalier> historique = PersistancePrixJournaliers::lirePrixJournaliersDUnFichier("C:/Users/hp/Desktop/enit/S2/MP/prices_simple.csv");
+    vector<PrixJournalier> historique = PersistancePrixJournaliers::lirePrixJournaliersDUnFichier("C:\\Users\\hp\\Desktop\\enit\\S2\\MP\\prices_simple.txt");
     BourseVector  bourse(historique);
     vector<PrixJournalier> PrixJournaliersParDate= bourse.getPrixJournaliersParDate(d1);
     for (int i; i<PrixJournaliersParDate.size();i++)
               cout<<PrixJournaliersParDate[i];
-    vector<string> actionsDisponibles= bourse.getActionsDisponiblesParDate(d2);
+    vector<string> actionsDisponibles= bourse.getActionsDisponiblesParDate(d1);
     for (int i; i<actionsDisponibles.size();i++)
                 cout<<actionsDisponibles[i];
     return 1;
