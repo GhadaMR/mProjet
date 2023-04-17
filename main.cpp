@@ -58,8 +58,6 @@ Date::Date(int j,int m,int a):jour(j), mois(m),annee(a){}
 
 
 
-
-
 class PrixJournalier {
     private:
         Date date;
@@ -70,14 +68,13 @@ class PrixJournalier {
         friend istream& operator>>(istream& flux, PrixJournalier& pj) ;
         friend ostream& operator<<(ostream& flux, const PrixJournalier& pj) ;
         friend class BourseVector;
-
 };
 istream& operator>>(istream& flux, PrixJournalier& pj) {
             flux >> pj.date >> pj.action >> pj.prix;
             return flux;
         }
 ostream& operator<<(ostream& flux, const PrixJournalier& pj) {
-            flux <<pj.date<<pj.action<<pj.prix;
+            flux << pj.date <<"   "<< pj.action << "  \n "<<pj.prix<<endl;
             return flux;
         }
 
@@ -87,7 +84,7 @@ class PersistancePrixJournaliers
     public:
         static vector<PrixJournalier> lirePrixJournaliersDUnFichier(string chemin){
             vector<PrixJournalier> historique;
-            ifstream f( chemin );
+            ifstream f(chemin);
             int nbLignes= 0;
             string entete;
             if(f.is_open()){
@@ -96,19 +93,26 @@ class PersistancePrixJournaliers
                     PrixJournalier pj;
                     f>>(pj);
                     historique.push_back(pj);
-                    nbLignes++;    
+                    nbLignes++;
                 }
             }
-        return historique;
+            return historique;
         }
 };
 
-class BourseVector
-{
-private:
-    vector<PrixJournalier> prixj;
+class Bourse{
+ protected:
+    Date dateAujoudhui;
+ public:
+    virtual vector<string> getActionsDisponiblesParDate(Date date)=0;
+    virtual vector<PrixJournalier> getPrixJournaliersParDate(Date date)=0;
+};
 
-public:
+class BourseVector: public Bourse
+{
+ private:
+    vector<PrixJournalier> prixj;
+ public:
     BourseVector(vector<PrixJournalier> pj) : prixj(pj) {}
 
     vector<string> getActionsDisponiblesParDate(Date date)
@@ -137,6 +141,7 @@ public:
         return prix_journaliers;
     }
 };
+
 
 int main()
 {
