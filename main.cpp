@@ -22,7 +22,26 @@ ostream& operator<<( ostream& flux, const Date& d){
     return flux;
 }
 istream& operator>>(istream& flux, Date& d){
-        flux>>d.jour>>d.mois>>d.annee;
+        string line;
+        ifstream myfile("C:\\Users\\hp\\Desktop\\enit\\S2\\MP\\prices_simple.txt");
+        string tab[100];
+        int i = 0;
+        if (myfile.is_open()) {
+          while (getline(myfile,line)) {
+            tab[i] = line;
+            i++;
+          }
+          myfile.close();
+        }
+        flux.getline(tab, 100, '/');
+        int jour=atoi(tab);
+        flux>>jour;
+        flux.getline(tab, 100, '/');
+        int mois=atoi(tab);
+        flux>>mois;
+        flux.getline(tab, 100, '/');
+        int annee=atoi(tab);
+        flux>>annee;
     return flux;
 }
 bool Date::operator==(const Date& d)const{
@@ -67,7 +86,8 @@ class PrixJournalier {
         PrixJournalier(){};
         friend istream& operator>>(istream& flux, PrixJournalier& pj) ;
         friend ostream& operator<<(ostream& flux, const PrixJournalier& pj) ;
-        friend class BourseVector;
+        Date getDate(){return date;};
+        string getAction(){return action;};
 };
 istream& operator>>(istream& flux, PrixJournalier& pj) {
             flux >> pj.date >> pj.action >> pj.prix;
@@ -117,12 +137,15 @@ class BourseVector: public Bourse
 
     vector<string> getActionsDisponiblesParDate(Date date)
     {
+        vector<PrixJournalier> prjr=getPrixJournaliersParDate(date);
         vector<string> actions;
-        for (int i; i<prixj.size();i++)
+        int i=0;
+        while ((prjr[i].getDate() < dateAujoudhui) && prjr.size()<i)
         {
-            if (prixj[i].date == date)
+            i++;
+            if (prjr[i].getDate() == date)
             {
-                actions.push_back(prixj[i].action);
+                actions.push_back(prjr[i].getAction());
             }
         }
         return actions;
@@ -131,9 +154,11 @@ class BourseVector: public Bourse
     vector<PrixJournalier> getPrixJournaliersParDate(Date date)
     {
         vector<PrixJournalier> prix_journaliers;
-        for (int i; i<prixj.size();i++)
+        int i=0;
+        while (prixj[i].getDate() < dateAujoudhui && prixj.size()<i)
         {
-            if (prixj[i].date == date)
+            i++;
+            if (prixj[i].getDate() == date)
             {
                 prix_journaliers.push_back(prixj[i]);
             }
@@ -168,3 +193,4 @@ int main()
                 cout<<actionsDisponibles[i];
     return 1;
 }
+
