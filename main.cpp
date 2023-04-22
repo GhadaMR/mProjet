@@ -2,6 +2,7 @@
 #include <string>
 #include<vector>
 #include<fstream>
+#include <ctime>
 using namespace std;
 
 class Date{
@@ -80,6 +81,7 @@ class PrixJournalier {
         friend ostream& operator<<(ostream& flux, const PrixJournalier& pj) ;
         Date getDate(){return date;};
         string getAction(){return action;};
+        double getPrix(){return prix;};
 };
 istream& operator>>(istream& flux, PrixJournalier& pj) {
             flux >> pj.date >> pj.action >> pj.prix;
@@ -158,10 +160,71 @@ class BourseVector: public Bourse
         return prix_journaliers;
     }
 };
+class Simulation {
+     private:
+         Date dateDebut;
+         Date dateFin;
+         Date dateCourante;
+         double budget;
+     static:
+         void executer(Bourse& bourse, Trader& trader, Date dateDebut, Date dateFin, double solde);
+};
+void Simulation::executer(Bourse& bourse, Trader& trader, Date dateDebut, Date dateFin, double solde){
+    int i=0;
+    while (dateCourante<dateFin){
+        string choix=trader.choisirTransaction(bourse,portefeuille);
+        i++;
+        if (i=100)
+            dateCourante.incrementerDate();
+    }
+}
+enum TypeTransaction {acheter, vendre, rienfaire};
+class Transaction{
+    private;
+        TypeTransaction type;
+        string nomAction;
+        float quantite;
+
+};
+class Titre{
+    private:
+      string action;
+      float qt;
+};
+
+class Portefeuille{
+   private:
+       double solde;
+       string actions[1000];
+   public:
+       ajouterTitre(Titre titre);
+       retirerTitre(Titre titre);
+       deposerMontant(double montant);
+       retirerMontant(double montant);
+};
+
+class Trader{
+    public:
+      int nbrTxParJour=0;
+      virtual Transaction choisirTransaction(const Bourse& bourse, const Portefeuille &portefeuille)=0;
+    };
 
 
+class TraderAleatoire: public Trader{
+     public:
+      Transaction choisirTransaction(const Bourse& bourse, const Portefeuille &portefeuille);
+};
+Transaction Trader::choisirTransaction(const Bourse& bourse, const Portefeuille &portefeuille){
+    if (nbrTxParJour<100){
+      nbrTxParJour++;
+      if ()
+      TypeTransaction type = static_cast<TypeTransaction>(rand()%3);
+      return type;
+    }
+}
 int main()
 {
+    srand (time(NULL));
     Date d1;
     cin>> d1;
     cout<<d1;
@@ -188,4 +251,5 @@ int main()
                 cout<<actionsDisponibles[i];
     return 1;
 }
+
 
