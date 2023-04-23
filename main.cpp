@@ -170,58 +170,112 @@ class Simulation {
          void executer(Bourse& bourse, Trader& trader, Date dateDebut, Date dateFin, double solde);
 };
 void Simulation::executer(Bourse& bourse, Trader& trader, Date dateDebut, Date dateFin, double solde){
-    int i=0;
+    int nbrTxParJour=0;
+    trader.acheter(bourse,dateCourante);
+    nbrTxParJour++;
     while (dateCourante<dateFin){
         string choix=trader.choisirTransaction(bourse,portefeuille);
-        i++;
-        if (i=100)
-            dateCourante.incrementerDate();
+        if(strcmp(choix,"acheter")){
+             trader.acheter(bourse,dateCourante);
+             nbrTxParJour++;}
+        if(strcmp(choix,"vendre")){
+             trader.vendre(bourse,dateCourante);
+             nbrTxParJour++;}
+        else
+             dateCourante.incrementerDate();
+        if (nbrTxParJour>=100){
+             nbrTxParJour=0;
+             dateCourante.incrementerDate();}
     }
+    for(string action :trader.getportfeuille().getActions())
+         
 }
-enum TypeTransaction {acheter, vendre, rienfaire};
+enum TypeTransaction {"acheter", "vendre", "rienfaire"};
 class Transaction{
     private;
         TypeTransaction type;
         string nomAction;
-        float quantite;
-
+        int quantite;
+     public:
+       
 };
 class Titre{
     private:
       string action;
-      float qt;
+      double qt;
+    public:
+      Titre(string a, float q): action(a), qt(q){};
+      string getAction(){return action;};
+      double getQt(){return qt;};
+       
 };
 
 class Portefeuille{
    private:
        double solde;
-       string actions[1000];
+       vector<Titre> titres;
    public:
-       ajouterTitre(Titre titre);
-       retirerTitre(Titre titre);
-       deposerMontant(double montant);
-       retirerMontant(double montant);
+       double getSolde(){return solde;};
+       vector<Titre> getTitres(){return titres;};
+       void ajouterTitre(Titre titre);
+       void retirerTitre(Titre titre);
+       void deposerMontant(double montant);
+       void retirerMontant(double montant);
 };
 
 class Trader{
+    private:
+        string nom;
+        Portefeuille portefeuille;
     public:
-      int nbrTxParJour=0;
-      virtual Transaction choisirTransaction(const Bourse& bourse, const Portefeuille &portefeuille)=0;
+        virtual Transaction choisirTransaction(const Bourse& bourse, const Portefeuille &portefeuille)=0;
+        Trader(string nom, double budget, double limiteAchat, double limiteVente);
+        virtual ~Trader() {};
+        string getNom() const;
+        vector<string> getPortefeuille() const{return portefeuille;};
+        virtual void acheter(Bourse& bourse, Date date)=0;
+        virtual void vendre(string action, int quantite, double prix)=0;
+        
     };
 
 
 class TraderAleatoire: public Trader{
      public:
       Transaction choisirTransaction(const Bourse& bourse, const Portefeuille &portefeuille);
+      void acheter(Bourse& bourse, Date date);
+      void vendre(Bourse& bourse, Date date);
 };
 Transaction Trader::choisirTransaction(const Bourse& bourse, const Portefeuille &portefeuille){
-    if (nbrTxParJour<100){
-      nbrTxParJour++;
-      if ()
       TypeTransaction type = static_cast<TypeTransaction>(rand()%3);
       return type;
-    }
 }
+ void acheter(Bourse& bourse, Date date){
+    vector<PrixJournalier> PrixJournaliersDisponibles = bourse.getPrixJournaliersParDate(date);
+    do{
+       int index = rand() % PrixJournaliersDisponibles.size();
+       string action= PrixJournaliersDisponibles[index];
+       double prixAction= action.getPrix();
+    }while(prixAction>portefeuille.getSolde());
+    double quantite= floor(portefeuille.getSolde()/prixAction);
+    Titre t(action, quantite);
+    portefeuille.ajouterTitre(t);
+    portefeuille.retirerMontant(prixAction*quantite);
+ }
+void vendre(Bourse& bourse, Date date){
+       vector<Titre> titresAvendre = portefeuille.titres;
+       int index = rand() % titresAvendre.size();
+       Titre titre= titresAvendre[index];
+       vector<PrixJournalier> PrixJournaliersDisponibles = bourse.getPrixJournaliersParDate(date);
+       for (PrixJournalier i = PrixJournaliersDisponibles.rbegin(); i != PrixJournaliersDisponibles.rend(); ++i) {
+            if (strcmp(PrixJournaliersDisponibles[*i].getAction(),titre.getAction())){
+                 double prixAction=PrixJournaliersDisponibles[*i].getPrix();
+                 break;}
+       }
+       int quantiteAvendre= 1+rand()%titre.getQt();
+       portefeuille.retirerTitre(titre);
+       portefeuille.deposerMontant(prixAction*quantiteAvendre);
+}
+    
 int main()
 {
     srand (time(NULL));
