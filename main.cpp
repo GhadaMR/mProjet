@@ -1,4 +1,4 @@
->#include <iostream>
+#include <iostream>
 #include <string>
 #include<vector>
 #include<fstream>
@@ -147,7 +147,7 @@ class Bourse{
  public:
     virtual vector<string> getActionsDisponiblesParAujourdhui()=0;
     virtual vector<string> getActionsDisponiblesParDate(Date date)=0;
-    //virtual vector<string> getActionsDisponiblesParPrix(double prix)=0;//à completer
+//virtual vector<string> getActionsDisponiblesParPrix(double prix)=0;//à completer
     //virtual vector<PrixJournalier> getPrixJournaliersParAction(string action)=0;//à completer
     virtual vector<PrixJournalier> getPrixJournaliersParDate(Date date)=0;
     //virtual vector<PrixJournalier> getPrixJournaliersParPrix(double prix)=0;//à completer
@@ -224,30 +224,40 @@ class Transaction{
 
 };
 class Titre{
-    private:
+    public:
       string action;
       double qt;
     public:
       Titre(string a, float q): action(a), qt(q){};
-      string getAction(){return action;};
-      double getQt(){return qt;};
-
+      string getAction()const {return action;};
+      double getQt()const{return qt;};
+     // friend ostream& operator<<(ostream& flux,const Titre& t);
 };
 
 class Portefeuille{
    private:
-       double solde;
+
        vector<Titre> titres;
+       double solde;
    public:
+
+       Portefeuille(vector<Titre> t,double s):titres(t),solde(s){};
        double getSolde(){return solde;};
        vector<Titre> getTitres(){return titres;};
-       void ajouterTitre(Titre titre);
-       void retirerTitre(Titre titre);
+
+       void ajouterTitre (  Titre titre);//hethy matemchich
+       void retirerTitre(Titre titre);//hethy matemchich
        void deposerMontant(double montant);
        void retirerMontant(double montant);
 };
+
 void Portefeuille::ajouterTitre(Titre titre){
-    titres.push_back(titre);
+    /*for ( auto t : titres) {
+        if (t.getAction() == titre.getAction())
+
+            t.getQt+= titre.getQt();
+        else*/
+            titres.push_back(titre);
 
 }
 void Portefeuille::retirerTitre(Titre titre) {
@@ -389,21 +399,48 @@ int main()
     /* Date d;
     cin>>d;
     d.incrementerDate();*/
-    Date d(4,1,2010);
-
+    Date d1(4,1,2010);
+    Date d2(5,1,2010);
     vector<PrixJournalier>historique=PersistancePrixJournaliers::lirePrixJournaliersDUnFichier("C:\\Users\\Zhome\\Documents\\prices_simple.csv");
-
     BourseVector v(historique);
     v.getPrixjournaliers();
-    vector<string>vec= v.getActionsDisponiblesParDate(d);
+    vector<string>vec= v.getActionsDisponiblesParDate(d1);
+    vector<Titre>vecT;
     for (auto i :vec){
+          Titre t(i,1);
+          vecT.push_back(t);
+          //cout<<t<<endl;
+          //cout<<t.getQt()<<endl;
+          }
 
-            cout<<i<<endl;
-            }
+   Portefeuille p(vecT,200000);
+   //Titre t1("IPGERT",1);
+  // p.ajouterTitre(t1);
+   //cout<<p.getSolde()<<endl;
 
-    cout<<vec.size();
+   for (auto i :p.getTitres()){
+
+          cout<<i.getAction()<<"-" <<i.getQt()<<endl;
+          cout<<p.getTitres().size();
+          }
+
+  //cout<<p.getSolde()<<endl;
+   /*int nb=0;
+  vector<Titre> titres = p.getTitres();
+
+   for (int i = 0; i < titres.size(); i++) {
+    cout << titres.at(i)<< endl;
+}
 
 
+          //cout<<nb++<<endl;
+
+
+  /* Trader T("maram", p);
+
+
+    Simulation
+    Simulation(Bourse& bourse, Trader& trader, d1, d2, double solde)*/
 
     return 0;
 }
