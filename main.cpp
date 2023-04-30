@@ -152,9 +152,11 @@ class Bourse{
         int jour = localtm->tm_mday;
         int mois = localtm->tm_mon + 1;
         int annee = localtm->tm_year + 1900;
-        Date dateAujourdhui(jour, mois, annee);
-
+        dateAujourdhui.jour = jour;
+        dateAujourdhui.mois = mois;
+        dateAujourdhui.annee = annee;
         return dateAujourdhui;
+
     }
     virtual vector<PrixJournalier> getPrixJournaliersDisponiblesParAujourdhui()=0;
     virtual vector<string> getActionsDisponiblesParAujourdhui()=0;
@@ -163,6 +165,7 @@ class Bourse{
     virtual vector<PrixJournalier> getPrixJournaliersParAction(string action)=0;//hethy matemchich
     virtual vector<PrixJournalier> getPrixJournaliersParDate(Date date)=0;
     virtual vector<PrixJournalier> getPrixJournaliersParPrix(double prix)=0;
+    virtual ~Bourse(){};
 
 };
 
@@ -175,7 +178,7 @@ public:
 
 
     BourseVector( vector<PrixJournalier> historique) : prixj(historique) {};
-    vector<PrixJournalier>getPrixjournaliers(){
+    vector<PrixJournalier> getPrixjournaliers(){
         return prixj;
     }
     vector<string> getActionsDisponiblesParPrix(double prix)
@@ -303,7 +306,7 @@ class Transaction{
         string nomAction;
         int quantite;
      public:
-
+        Transaction(TypeTransaction t,string a,int q):type(t),nomAction(a),quantite(q){};
 };
 class Titre{
     public:
@@ -326,7 +329,6 @@ class Portefeuille{
        Portefeuille(vector<Titre> t,double s):titres(t),solde(s){};
        double getSolde(){return solde;};
        vector<Titre> getTitres(){return titres;};
-
        void ajouterTitre (  Titre titre);//hethy matemchich
        void retirerTitre(Titre titre);//hethy matemchich
        void deposerMontant(double montant);
@@ -358,7 +360,7 @@ void Portefeuille::retirerMontant(double montant){
     solde-=montant;
 }
 class Trader{
-    private:
+    protected:
         string nom;
         Portefeuille portefeuille;
     public:
@@ -374,6 +376,7 @@ class Trader{
 class TraderAleatoire: public Trader{
      public:
       TypeTransaction choisirTransaction(const Bourse& bourse, const Portefeuille &portefeuille);
+      TraderAleatoire(string n,Portefeuille p):Trader(n, p){};
 
 };
 TypeTransaction Trader::choisirTransaction(const Bourse& bourse, const Portefeuille &portefeuille){
@@ -392,70 +395,56 @@ class Simulation {
       static void executer(Bourse& bourse, Trader& trader, Date dateDebut, Date dateFin, double solde);
 };
 void Simulation::executer(Bourse& bourse, Trader& trader, Date dateDebut, Date dateFin, double solde){
-     int nbrTxParJour=0;
-     while (dateDebut<dateFin){
-
-        TypeTransaction choix=trader.choisirTransaction(bourse,trader.getPortefeuille());
-
-        if(choix==acheter || nbrTxParJour==0 ){
-                 vector<PrixJournalier> PrixJournaliersDisponibles = bourse.getPrixJournaliersParDate(dateDebut);
-                 double prixAction;
-                 string action;
-                 do{
-                 int index = rand() % PrixJournaliersDisponibles.size();
-                 PrixJournalier pj= PrixJournaliersDisponibles[index];
-                 prixAction= pj.getPrix();
-                 action =pj.getAction();
-                 }while(prixAction>trader.getPortefeuille().getSolde());
-                 double quantite= floor(trader.getPortefeuille().getSolde()/prixAction);
-                 Titre t(action, quantite);
-                 trader.getPortefeuille().ajouterTitre(t);
-                 trader.getPortefeuille().retirerMontant(prixAction*quantite);
-                 nbrTxParJour++;
-                 dateDebut.incrementerDate();
-             }
-        else if (choix==vendre ){
-
-             int p=0;
-             for(Titre titre :trader.getPortefeuille().getTitres()){
-                for(PrixJournalier pj: bourse.getPrixJournaliersParDate(dateDebut)){
-                    if (titre.getAction()==pj.getAction()&& titre.getQt()>0){
-
-                       p+=1;
-
-                       }}
-             if (p==trader.getPortefeuille().getTitres().size()){
-                vector<Titre>titresAvendre = trader.getPortefeuille().getTitres();
-                int index = rand() % titresAvendre.size();
-                Titre titre= titresAvendre[index];
-                vector<PrixJournalier> PrixJournaliersDisponibles = bourse.getPrixJournaliersParDate(dateDebut);
-
+    int nbrTxParJour=0;
+    Date dateCourante=dateDebut ;
+    while (dateCourante<dateFin){
+        nbrTxParJour=0;
+        do{
+            TypeTransaction choix=trader.choisirTransaction(bourse,trader.getPortefeuille());
+            if(choix==acheter){
+                vector<PrixJournalier> PrixJournaliersDisponibles = bourse.getPrixJournaliersParDate(dateCourante);
                 double prixAction;
-                for (auto i = PrixJournaliersDisponibles.rbegin(); i != PrixJournaliersDisponibles.rend(); ++i) {
-                if (i->getAction() == titre.getAction()){
-                      prixAction=i->getPrix();
-                       break;}
-                 }
-                 double quantiteAvendre = 1.0 + static_cast<double>(rand()) / RAND_MAX * (titre.getQt());
-                 trader.getPortefeuille().retirerTitre(titre);
-                 trader.getPortefeuille().deposerMontant(prixAction*quantiteAvendre);
-                 nbrTxParJour++;
-                 dateDebut.incrementerDate();
+                string action;
+                do{
+                    int index = rand() % PrixJournaliersDisponibles.size();
+                    PrixJournalier pj= PrixJournaliersDisponibles[index];
+                    prixAction= pj.getPrix();
+                    action =pj.getAction();
+                }while(prixAction>trader.getPortefeuille().getSolde());
+                double quantite= floor(trader.getPortefeuille().getSolde()/prixAction);
+                Titre t(action, quantite);
+                trader.getPortefeuille().ajouterTitre(t);
+                trader.getPortefeuille().retirerMontant(prixAction*quantite);
+                nbrTxParJour++;
+            }
+            else if(choix==vendre){
+                vector<Titre> titresAvendre = trader.getPortefeuille().getTitres();
+                for(Titre titre : titresAvendre){
+                    vector<PrixJournalier> PrixJournaliersDisponibles = bourse.getPrixJournaliersParDate(dateCourante);
+                    for(PrixJournalier pj: PrixJournaliersDisponibles){
+                        if(titre.getAction() == pj.getAction()){
+                            double quantiteAvendre = 1.0 + static_cast<double>(rand()) / RAND_MAX * (titre.getQt());
+                            double prixAction = pj.getPrix();
+                            trader.getPortefeuille().retirerTitre(titre);
+                            trader.getPortefeuille().deposerMontant(prixAction*quantiteAvendre);
+                            nbrTxParJour++;
+                            break;
+                        }
+                    }
                 }
-             }
-        }
-    else //rienfaire
-                dateDebut.incrementerDate();
-
-
-    if (nbrTxParJour>=100){
-             nbrTxParJour=0;
-             dateDebut.incrementerDate();}
-
+            }
+            else{
+                dateCourante.incrementerDate();
+            }
+            dateCourante.incrementerDate();
+        }while(nbrTxParJour < 100);
 
     }
-
+    for(Titre titre : trader.getPortefeuille().getTitres()){
+            //effacer tout
+        }
 }
+
 
 
 int main()
@@ -468,70 +457,43 @@ int main()
     Date d2;
     cin>>d2;
     d1.incrementerDate();
-    cout << d1 << endl;
-    Date d3;
-    cin>>d3;
-    cout << d3 << endl;
-    PrixJournalier pj1;
-    cin>>pj1;
-    cout<< pj1;
-    PrixJournalier pj2;
-    cin>>pj2;
-    cout<< pj2;*/
-    /* Date d;
-    cin>>d;
-    d.incrementerDate();*/
-    Date d1(4,1,2010);
-    Date d2(30,04,2023);
-    vector<PrixJournalier>historique=PersistancePrixJournaliers::lirePrixJournaliersDUnFichier("C:\\Users\\Zhome\\Documents\\prices_simple.csv");
+    cout << d1 << endl;*/
+    vector<PrixJournalier> historique=PersistancePrixJournaliers::lirePrixJournaliersDUnFichier("C:\\Users\\hp\\Desktop\\enit\\S2\\MP\\prices_simple.csv");
+   /* for(int i = 0; i < historique.size(); i++) {
+        cout << historique[i] << endl;
+    }*/  // afficher le vecteur historique
     BourseVector v(historique);
-    v.getPrixjournaliers();
+    Titre(string a, float q);
+    Portefeuille(vector<Titre> t,double s);
+    TraderAleatoire("jack",)
 
-    cout<<v.getDateAujourdhui();
-    Date d0=v.getDateAujourdhui();
-    vector<PrixJournalier>vec= v.getPrixJournaliersParAction("MARAM");
-    //vector<Titre>vecT;
-    cout <<vec.size()<<endl;
-      for (auto i :vec){
-          /*Titre t(i,1);
-          vecT.push_back(t);*/
-          //cout<<t<<endl;
-          //cout<<t.getQt()<<endl;
-           cout<<i<<endl;
 
-      }
-
-   //Portefeuille p(vecT,200000);
-   //Titre t1("IPGERT",1);
-  // p.ajouterTitre(t1);
-   //cout<<p.getSolde()<<endl;
-
-   /*for (auto i :p.getTitres()){
+ Simulation::executer(v, Trader& trader, d1, d2, 134411);
+   for (auto i :p.getTitres()){
 
           cout<<i.getAction()<<"-" <<i.getQt()<<endl;
           cout<<p.getTitres().size();
           }
 
-  //cout<<p.getSolde()<<endl;
-   /*int nb=0;
-  vector<Titre> titres = p.getTitres();
+   cout<<p.getSolde()<<endl;
+   int nb=0;
+   vector<Titre> titres = p.getTitres();
 
    for (int i = 0; i < titres.size(); i++) {
     cout << titres.at(i)<< endl;
 }
 
 
-          //cout<<nb++<<endl;
+   cout<<nb++<<endl;
 
 
-  /* Trader T("maram", p);
+   Trader T("maram", p);
 
 
-    Simulation
-    Simulation(Bourse& bourse, Trader& trader, d1, d2, double solde)*/
+   Simulation
+   Simulation(Bourse& bourse, Trader& trader, d1, d2, double solde)*/
 
     return 0;
 }
-
 
 
