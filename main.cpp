@@ -145,12 +145,24 @@ class Bourse{
  protected:
     Date dateAujourdhui;
  public:
+    Date getDateAujourdhui() {
+
+        time_t now = time(0);
+        tm* localtm = localtime(&now);
+        int jour = localtm->tm_mday;
+        int mois = localtm->tm_mon + 1;
+        int annee = localtm->tm_year + 1900;
+        Date dateAujourdhui(jour, mois, annee);
+
+        return dateAujourdhui;
+    }
+    virtual vector<PrixJournalier> getPrixJournaliersDisponiblesParAujourdhui()=0;
     virtual vector<string> getActionsDisponiblesParAujourdhui()=0;
     virtual vector<string> getActionsDisponiblesParDate(Date date)=0;
-//virtual vector<string> getActionsDisponiblesParPrix(double prix)=0;//à completer
-    //virtual vector<PrixJournalier> getPrixJournaliersParAction(string action)=0;//à completer
+    virtual vector<string> getActionsDisponiblesParPrix(double prix)=0;
+    virtual vector<PrixJournalier> getPrixJournaliersParAction(string action)=0;//hethy matemchich
     virtual vector<PrixJournalier> getPrixJournaliersParDate(Date date)=0;
-    //virtual vector<PrixJournalier> getPrixJournaliersParPrix(double prix)=0;//à completer
+    virtual vector<PrixJournalier> getPrixJournaliersParPrix(double prix)=0;
 
 };
 
@@ -166,16 +178,37 @@ public:
     vector<PrixJournalier>getPrixjournaliers(){
         return prixj;
     }
+    vector<string> getActionsDisponiblesParPrix(double prix)
+        {
+        vector<PrixJournalier> prj =getPrixJournaliersParPrix(prix);
+        vector<string> actionsParPrix;
+        int i=0;
+
+        while ((prj[i].getDate() < dateAujourdhui) && i<prj.size())
+        {
+
+            if (prj[i].getPrix()== prix)
+            {
+                actionsParPrix.push_back(prj[i].getAction());
+            }
+            i++;
+        }
+        return actionsParPrix;
+
+}
+
     vector<string> getActionsDisponiblesParAujourdhui()
     {
-        vector<PrixJournalier> prjr=getPrixJournaliersParDate(dateAujourdhui);
+        vector<PrixJournalier> prjr=getPrixJournaliersDisponiblesParAujourdhui();
         vector<string> actionsAujourdhui;
         int i=0;
-         while (i < prjr.size() && prjr[i].getDate() < dateAujourdhui){
-             if (prjr[i].getDate() == dateAujourdhui){
+         while (i < prjr.size() && prjr[i].getDate() < dateAujourdhui  ){
+             if (prjr[i].getDate() == getDateAujourdhui()){
                 actionsAujourdhui.push_back(prjr[i].getAction());
                   }
-             i++;}
+             i++;
+             }
+        return actionsAujourdhui;
     }
     vector<string> getActionsDisponiblesParDate(Date date)
     {
@@ -200,7 +233,7 @@ public:
         vector<PrixJournalier> prix_journaliers;
         int i=0;
          if(!prixj.empty()){
-        while (prixj[i].getDate() < dateAujourdhui && prixj.size()>i)
+        while ( prixj.size()>i&& prixj[i].getDate() < dateAujourdhui)
         {
 
             if (prixj[i].getDate() == date)
@@ -212,6 +245,55 @@ public:
         return prix_journaliers;
     }
     }
+  vector<PrixJournalier> getPrixJournaliersParAction(string action){
+       vector<PrixJournalier> prix_journaliers;
+        int i=0;
+        if(!prixj.empty()){
+        while (prixj[i].getDate() < dateAujourdhui && prixj.size()>i)
+        {
+
+            if (prixj[i].getAction()==action)
+            {
+                prix_journaliers.push_back(prixj[i]);
+            }
+             i++;
+        }
+        return prix_journaliers;
+    }
+    }
+   vector<PrixJournalier> getPrixJournaliersParPrix(double prix){
+        vector<PrixJournalier> prix_journaliers;
+        int i=0;
+         if(!prixj.empty()){
+        while (prixj[i].getDate() < dateAujourdhui && prixj.size()>i)
+        {
+
+            if (prixj[i].getPrix() ==prix)
+            {
+                prix_journaliers.push_back(prixj[i]);
+            }
+             i++;
+        }
+        return prix_journaliers;
+    }
+   }
+    vector<PrixJournalier> getPrixJournaliersDisponiblesParAujourdhui(){
+        vector<PrixJournalier> prix_journaliers;
+        int i=0;
+         if(!prixj.empty()){
+        while (prixj[i].getDate() < dateAujourdhui && prixj.size()>i)
+        {
+
+            if (prixj[i].getDate() ==getDateAujourdhui())
+            {
+                prix_journaliers.push_back(prixj[i]);
+            }
+             i++;
+        }
+        return prix_journaliers;
+    }
+    }
+
 };
 
 enum TypeTransaction {acheter, vendre, rienfaire};
@@ -400,25 +482,31 @@ int main()
     cin>>d;
     d.incrementerDate();*/
     Date d1(4,1,2010);
-    Date d2(5,1,2010);
+    Date d2(30,04,2023);
     vector<PrixJournalier>historique=PersistancePrixJournaliers::lirePrixJournaliersDUnFichier("C:\\Users\\Zhome\\Documents\\prices_simple.csv");
     BourseVector v(historique);
     v.getPrixjournaliers();
-    vector<string>vec= v.getActionsDisponiblesParDate(d1);
-    vector<Titre>vecT;
-    for (auto i :vec){
-          Titre t(i,1);
-          vecT.push_back(t);
+
+    cout<<v.getDateAujourdhui();
+    Date d0=v.getDateAujourdhui();
+    vector<PrixJournalier>vec= v.getPrixJournaliersParAction("MARAM");
+    //vector<Titre>vecT;
+    cout <<vec.size()<<endl;
+      for (auto i :vec){
+          /*Titre t(i,1);
+          vecT.push_back(t);*/
           //cout<<t<<endl;
           //cout<<t.getQt()<<endl;
-          }
+           cout<<i<<endl;
 
-   Portefeuille p(vecT,200000);
+      }
+
+   //Portefeuille p(vecT,200000);
    //Titre t1("IPGERT",1);
   // p.ajouterTitre(t1);
    //cout<<p.getSolde()<<endl;
 
-   for (auto i :p.getTitres()){
+   /*for (auto i :p.getTitres()){
 
           cout<<i.getAction()<<"-" <<i.getQt()<<endl;
           cout<<p.getTitres().size();
@@ -444,5 +532,6 @@ int main()
 
     return 0;
 }
+
 
 
