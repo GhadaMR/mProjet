@@ -329,24 +329,19 @@ class Portefeuille{
        Portefeuille(vector<Titre> t,double s):titres(t),solde(s){};
        double getSolde(){return solde;};
        vector<Titre> getTitres(){return titres;};
-       void ajouterTitre (  Titre titre);//hethy matemchich
-       void retirerTitre(Titre titre);//hethy matemchich
+       void ajouterTitre (  Titre titre);
+       void retirerTitre(Titre* titre);
        void deposerMontant(double montant);
        void retirerMontant(double montant);
 };
 
 void Portefeuille::ajouterTitre(Titre titre){
-    /*for ( auto t : titres) {
-        if (t.getAction() == titre.getAction())
-
-            t.getQt+= titre.getQt();
-        else*/
-            titres.push_back(titre);
+      titres.push_back(titre);
 
 }
-void Portefeuille::retirerTitre(Titre titre) {
+void Portefeuille::retirerTitre(Titre* titre) {
     for (auto it = titres.begin(); it != titres.end(); ++it) {
-        if (it->getAction() == titre.getAction()&& it->getQt()==titre.getQt()) {
+        if (it->getAction() == titre->getAction()&& it->getQt()==titre->getQt()) {
             titres.erase(it);
             break;
         }
@@ -425,7 +420,7 @@ void Simulation::executer(Bourse& bourse, Trader& trader, Date dateDebut, Date d
                         if(titre.getAction() == pj.getAction()){
                             double quantiteAvendre = 1.0 + static_cast<double>(rand()) / RAND_MAX * (titre.getQt());
                             double prixAction = pj.getPrix();
-                            trader.getPortefeuille().retirerTitre(titre);
+                            trader.getPortefeuille().retirerTitre(&titre);
                             trader.getPortefeuille().deposerMontant(prixAction*quantiteAvendre);
                             nbrTxParJour++;
                             break;
@@ -482,6 +477,37 @@ int main()
    for (int i = 0; i < titres.size(); i++) {
     cout << titres.at(i)<< endl;
 }
+    v.getPrixjournaliers();
+
+    //cout<<v.getDateAujourdhui();
+    //Date d0=v.getDateAujourdhui();
+
+    vector<string>vec= v.getActionsDisponiblesParAujourdhui();
+    cout <<vec.size()<<endl;
+    vector<Titre>vecT;
+
+      for (auto i :vec){
+
+           Titre t(i,1);
+           cout<<i<<endl;
+           vecT.push_back(t);
+          
+
+      }
+   Portefeuille p(vecT,200000);
+   Titre t1("IPGERT",1);
+   p.ajouterTitre(t1);
+   p.retirerTitre(&t1);
+ 
+
+   for (auto i :p.getTitres()){
+
+          cout<<i.getAction()<<"-" <<i.getQt()<<endl;
+
+          }
+   cout<<p.getTitres().size();
+
+
 
 
    cout<<nb++<<endl;
