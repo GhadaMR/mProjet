@@ -143,19 +143,8 @@ class Bourse{
  protected:
     Date dateAujourdhui;
  public:
-    Date getDateAujourdhui() {
-
-        time_t now = time(0);
-        tm* localtm = localtime(&now);
-        int jour = localtm->tm_mday;
-        int mois = localtm->tm_mon + 1;
-        int annee = localtm->tm_year + 1900;
-        dateAujourdhui.jour = jour;
-        dateAujourdhui.mois = mois;
-        dateAujourdhui.annee = annee;
-        return dateAujourdhui;
-
-    }
+    Date getDateAujourdhui() { return dateAujourdhui;}
+    void setDateAujourdhui(Date date){dateAujourdhui=date;}
     virtual vector<PrixJournalier> getPrixJournaliersDisponiblesParAujourdhui()=0;
     virtual vector<string> getActionsDisponiblesParAujourdhui()=0;
     virtual vector<string> getActionsDisponiblesParDate(Date date)=0;
@@ -278,13 +267,14 @@ class Transaction{
         Transaction(TypeTransaction t,string a,int q):type(t),nomAction(a),quantite(q){};
 };
 class Titre{
-    public:
+    private:
       string action;
       double qt;
     public:
       Titre(string a, float q): action(a), qt(q){};
       string getAction()const {return action;};
       double getQt()const{return qt;};
+      void setQt(double quantite){qt=quantite;}
 };
 
 class Portefeuille{
@@ -363,25 +353,25 @@ Transaction Trader::choisirTransaction(const Bourse& bourse, const Portefeuille 
         else{
 
               vector<string> actionsDeTrader=titresTrader.getAction();
-              vector<string> actions;
-              for (auto i:actionsDeBourse){
+              vector<PrixJournalier> prixJournalierDisponibleAVendre;
+              for (auto i:PrixJournaliersDisponibles){
                 for (auto j:actionsDeTrader){
-                    if (i==j){
-                        actions.push_back(i);
+                    if (i.getAction()==j){
+                        prixJournalierDisponibleAVendre.push_back(i);
                     }
                 }
               }
-              if (actions.empty()){
+              if (prixJournalierDisponibleAVendre.empty()){
                 Transaction transaction(rienfaire);
               }
               else{
                 TypeTransaction type = static_cast<TypeTransaction>(rand()%3);
                 if(type==acheter){
                     do{
-                      int index = rand() % PrixJournaliersDisponibles.size();
-                      PrixJournalier pj= PrixJournaliersDisponibles[index];
-                      prixAction= pj.getPrix();
-                      action =pj.getAction();
+                      int index = rand() % prixJournalierDisponibleAVendre.size();
+                      PrixJournalier pj= prixJournalierDisponibleAVendre[index];
+                      double prixAction= pj.getPrix();
+                      string action =pj.getAction();
                     }while(prixAction>portefeuille.getSolde());
                     double quantite= floor(portefeuille.getSolde()/prixAction);
                     Transaction transaction(acheter,action,quantite);
