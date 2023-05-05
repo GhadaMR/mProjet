@@ -6,6 +6,8 @@
 #include <cmath>
 #include <cstdlib>
 #include <sstream>
+#include<chrono>
+#include<map>
 
 using namespace std;
 
@@ -92,11 +94,6 @@ class PrixJournalier {
 
 };
 
-/*istream& operator>>(istream& flux, PrixJournalier& pj) {
-            flux >> pj.date >> pj.action >> pj.prix;
-            return flux;
-        }*/
-
 ostream& operator<<(ostream& flux, const PrixJournalier& pj) {
             flux << pj.date <<"   "<< pj.action << "  \n "<<pj.prix<<endl;
             return flux;
@@ -137,6 +134,7 @@ public:
                 nbLignes++;
             }
         }
+        f.close();
         return historique;
     }
 };
@@ -162,7 +160,7 @@ class Bourse{
     virtual vector<string> getActionsDisponiblesParAujourdhui()=0;
     virtual vector<string> getActionsDisponiblesParDate(Date date)=0;
     virtual vector<string> getActionsDisponiblesParPrix(double prix)=0;
-    virtual vector<PrixJournalier> getPrixJournaliersParAction(string action)=0;//hethy matemchich
+    virtual vector<PrixJournalier> getPrixJournaliersParAction(string action)=0;
     virtual vector<PrixJournalier> getPrixJournaliersParDate(Date date)=0;
     virtual vector<PrixJournalier> getPrixJournaliersParPrix(double prix)=0;
     virtual ~Bourse(){};
@@ -171,8 +169,8 @@ class Bourse{
 
 class BourseVector: public Bourse
 {
-public:
-    vector<PrixJournalier>prixj;
+ private:
+    vector<PrixJournalier> prixj;
  public:
 
 
@@ -185,16 +183,9 @@ public:
         {
         vector<PrixJournalier> prj =getPrixJournaliersParPrix(prix);
         vector<string> actionsParPrix;
-        int i=0;
-
-        while ((prj[i].getDate() < dateAujourdhui) && i<prj.size())
+        for(auto i : prj)
         {
-
-            if (prj[i].getPrix()== prix)
-            {
-                actionsParPrix.push_back(prj[i].getAction());
-            }
-            i++;
+                actionsParPrix.push_back(i.getAction());
         }
         return actionsParPrix;
 
@@ -204,13 +195,9 @@ public:
     {
         vector<PrixJournalier> prjr=getPrixJournaliersDisponiblesParAujourdhui();
         vector<string> actionsAujourdhui;
-        int i=0;
-         while (i < prjr.size() && prjr[i].getDate() < dateAujourdhui  ){
-             if (prjr[i].getDate() == getDateAujourdhui()){
-                actionsAujourdhui.push_back(prjr[i].getAction());
+        for(auto i : prjr){
+                actionsAujourdhui.push_back(i.getAction());
                   }
-             i++;
-             }
         return actionsAujourdhui;
     }
     vector<string> getActionsDisponiblesParDate(Date date)
@@ -219,15 +206,10 @@ public:
         vector<string> actions;
         int i=0;
 
-        while ((prj[i].getDate() < dateAujourdhui) && i<prj.size())
+        for (auto i : prj)
         {
-
-            if (prj[i].getDate() == date)
-            {
-                actions.push_back(prj[i].getAction());
+                actions.push_back(i.getAction());
             }
-            i++;
-        }
         return actions;
 
 }
@@ -235,10 +217,9 @@ public:
     {
         vector<PrixJournalier> prix_journaliers;
         int i=0;
-         if(!prixj.empty()){
-        while ( prixj.size()>i&& prixj[i].getDate() < dateAujourdhui)
+        if(!prixj.empty()&& date < dateAujourdhui){
+         while ( prixj.size()>i)
         {
-
             if (prixj[i].getDate() == date)
             {
                 prix_journaliers.push_back(prixj[i]);
@@ -267,34 +248,21 @@ public:
    vector<PrixJournalier> getPrixJournaliersParPrix(double prix){
         vector<PrixJournalier> prix_journaliers;
         int i=0;
-         if(!prixj.empty()){
-        while (prixj[i].getDate() < dateAujourdhui && prixj.size()>i)
-        {
-
-            if (prixj[i].getPrix() ==prix)
-            {
+        if(!prixj.empty()){
+           while (prixj[i].getDate() < dateAujourdhui && prixj.size()>i)
+          {
+              if (prixj[i].getPrix() ==prix)
+              {
                 prix_journaliers.push_back(prixj[i]);
-            }
-             i++;
-        }
+              }
+              i++;
+          }
         return prix_journaliers;
     }
    }
     vector<PrixJournalier> getPrixJournaliersDisponiblesParAujourdhui(){
-        vector<PrixJournalier> prix_journaliers;
-        int i=0;
-         if(!prixj.empty()){
-        while (prixj[i].getDate() < dateAujourdhui && prixj.size()>i)
-        {
-
-            if (prixj[i].getDate() ==getDateAujourdhui())
-            {
-                prix_journaliers.push_back(prixj[i]);
-            }
-             i++;
-        }
-        return prix_journaliers;
-    }
+        vector<PrixJournalier> prj= getPrixJournaliersParDate(dateAujourdhui);
+        return prj;
     }
 
 };
@@ -306,6 +274,7 @@ class Transaction{
         string nomAction;
         int quantite;
      public:
+        Transaction(TypeTransaction t):type(t){};
         Transaction(TypeTransaction t,string a,int q):type(t),nomAction(a),quantite(q){};
 };
 class Titre{
@@ -316,7 +285,6 @@ class Titre{
       Titre(string a, float q): action(a), qt(q){};
       string getAction()const {return action;};
       double getQt()const{return qt;};
-     // friend ostream& operator<<(ostream& flux,const Titre& t);
 };
 
 class Portefeuille{
@@ -329,7 +297,7 @@ class Portefeuille{
        Portefeuille(vector<Titre> t,double s):titres(t),solde(s){};
        double getSolde(){return solde;};
        vector<Titre> getTitres(){return titres;};
-       void ajouterTitre (  Titre titre);
+       void ajouterTitre (Titre titre);
        void retirerTitre(Titre* titre);
        void deposerMontant(double montant);
        void retirerMontant(double montant);
@@ -341,11 +309,11 @@ void Portefeuille::ajouterTitre(Titre titre){
 }
 void Portefeuille::retirerTitre(Titre* titre) {
     for (auto it = titres.begin(); it != titres.end(); ++it) {
-        if (it->getAction() == titre->getAction()&& it->getQt()==titre->getQt()) {
+        if (it->getAction() == titre->getAction() && it->getQt() == titre->getQt()) {
             titres.erase(it);
             break;
-        }
     }
+}
 }
 void Portefeuille::deposerMontant(double montant){
 
@@ -359,7 +327,7 @@ class Trader{
         string nom;
         Portefeuille portefeuille;
     public:
-        virtual TypeTransaction choisirTransaction(const Bourse& bourse, const Portefeuille &portefeuille)=0;
+        virtual Transaction choisirTransaction(const Bourse& bourse, const Portefeuille &portefeuille)=0;
         Trader(string n,Portefeuille p):nom(n),portefeuille(p){};
         virtual ~Trader() {};
         string getNom() const;
@@ -370,13 +338,70 @@ class Trader{
 
 class TraderAleatoire: public Trader{
      public:
-      TypeTransaction choisirTransaction(const Bourse& bourse, const Portefeuille &portefeuille);
+      Transaction choisirTransaction(const Bourse& bourse, const Portefeuille &portefeuille);
       TraderAleatoire(string n,Portefeuille p):Trader(n, p){};
 
 };
-TypeTransaction Trader::choisirTransaction(const Bourse& bourse, const Portefeuille &portefeuille){
-      TypeTransaction type = static_cast<TypeTransaction>(rand()%3);
-      return type;
+Transaction Trader::choisirTransaction(const Bourse& bourse, const Portefeuille &portefeuille){
+      vector<PrixJournalier> PrixJournaliersDisponibles = bourse.getPrixJournaliersParDate(bourse.getDateAujourdhui());
+      vector<string> actionsDeBourse=bourse.getActionsDisponiblesParDate(bourse.getDateAujourdhui());
+      vector<Titre> titresTrader=portfeuille.getTitres()
+      if (PrixJournaliersDisponibles.empty()){
+        Transaction transaction(rienfaire);
+      }
+      else{
+        if (titresTrader.empty()){
+                do{
+                    int index = rand() % PrixJournaliersDisponibles.size();
+                    PrixJournalier pj= PrixJournaliersDisponibles[index];
+                    double prixAction= pj.getPrix();
+                    string action =pj.getAction();
+                }while(prixAction>Portefeuille.getSolde());
+                double quantite= floor(getPortefeuille.getSolde()/prixAction);
+                Transaction transaction(acheter,action,quantite);
+         }
+        else{
+
+              vector<string> actionsDeTrader=titresTrader.getAction();
+              vector<string> actions;
+              for (auto i:actionsDeBourse){
+                for (auto j:actionsDeTrader){
+                    if (i==j){
+                        actions.push_back(i);
+                    }
+                }
+              }
+              if (actions.empty()){
+                Transaction transaction(rienfaire);
+              }
+              else{
+                TypeTransaction type = static_cast<TypeTransaction>(rand()%3);
+                if(type==acheter){
+                    do{
+                      int index = rand() % PrixJournaliersDisponibles.size();
+                      PrixJournalier pj= PrixJournaliersDisponibles[index];
+                      prixAction= pj.getPrix();
+                      action =pj.getAction();
+                    }while(prixAction>portefeuille.getSolde());
+                    double quantite= floor(portefeuille.getSolde()/prixAction);
+                    Transaction transaction(acheter,action,quantite);
+                }
+                else if (type==vendre){
+                        int index = rand() % titresTrader.size();
+                        Titre titreAvendre=titresTrader[index];
+                        for(PrixJournalier pj: PrixJournaliersDisponibles){
+                          if (titreAvendre.getAction()== pj.getAction()){
+                             double quantiteAvendre = 1.0 + static_cast<double>(rand()) / RAND_MAX * (titreAvendre.getQt());
+                             break;}
+                        }
+                        Transaction transaction(vendre,titreAvendre.getAction(),quantiteAvendre);
+
+              }
+                else{
+                    Transaction transaction(rienfaire);
+                }
+              }
+      return transaction;
 }
 
 
@@ -390,10 +415,9 @@ class Simulation {
       static void executer(Bourse& bourse, Trader& trader, Date dateDebut, Date dateFin, double solde);
 };
 void Simulation::executer(Bourse& bourse, Trader& trader, Date dateDebut, Date dateFin, double solde){
-    int nbrTxParJour=0;
     Date dateCourante=dateDebut ;
-    while (dateCourante<dateFin){
-        nbrTxParJour=0;
+    int nbrTxParJour=0;
+    while (dateCourante<bourse.getDateAujourdhui() && dateCourante<dateFin){
         do{
             TypeTransaction choix=trader.choisirTransaction(bourse,trader.getPortefeuille());
             if(choix==acheter){
@@ -414,111 +438,80 @@ void Simulation::executer(Bourse& bourse, Trader& trader, Date dateDebut, Date d
             }
             else if(choix==vendre){
                 vector<Titre> titresAvendre = trader.getPortefeuille().getTitres();
-                for(Titre titre : titresAvendre){
-                    vector<PrixJournalier> PrixJournaliersDisponibles = bourse.getPrixJournaliersParDate(dateCourante);
-                    for(PrixJournalier pj: PrixJournaliersDisponibles){
-                        if(titre.getAction() == pj.getAction()){
-                            double quantiteAvendre = 1.0 + static_cast<double>(rand()) / RAND_MAX * (titre.getQt());
-                            double prixAction = pj.getPrix();
-                            trader.getPortefeuille().retirerTitre(&titre);
-                            trader.getPortefeuille().deposerMontant(prixAction*quantiteAvendre);
-                            nbrTxParJour++;
-                            break;
-                        }
-                    }
+                vector<PrixJournalier> PrixJournaliersDisponibles = bourse.getPrixJournaliersParDate(dateCourante);
+                if(!titresAvendre.empty()){
+                 for(PrixJournalier pj: PrixJournaliersDisponibles){
+                    int index = rand() % titresAvendre.size();
+                    Titre titreAvendre=titresAvendre[index];
+                    if (titreAvendre.getAction()== pj.getAction()){
+                          double quantiteAvendre = 1.0 + static_cast<double>(rand()) / RAND_MAX * (titreAvendre.getQt());
+                          double prixAction = pj.getPrix();
+                          trader.getPortefeuille().retirerTitre(&titreAvendre);
+                          trader.getPortefeuille().deposerMontant(prixAction*quantiteAvendre);
+                          nbrTxParJour++;
+                          break;
+                 }
                 }
-            }
+                }
             else{
-                dateCourante.incrementerDate();
+                dateAujourdhui.incrementerDate();
             }
-            dateCourante.incrementerDate();
         }while(nbrTxParJour < 100);
 
     }
+   /* vector<PrixJournalier> prixJournaliersDisponiblesParAujourdhui = bourse.getPrixJournaliersDisponiblesParAujourdhui();
     for(Titre titre : trader.getPortefeuille().getTitres()){
-            //effacer tout
+             for(PrixJournalier pj: prixJournaliersDisponiblesParAujourdhui){
+                 if(titre.getAction()==pj.getAction()){
+                       double prixAction = pj.getPrix();
+                       double quantite =titre.getQt();
+                       trader.getPortefeuille().retirerTitre(&titre);
+                       trader.getPortefeuille().deposerMontant(prixAction*quantite);}
+                 else
+                 {
+                      vector<PrixJournalier> PrixJournaliersParAction=getPrixJournaliersParAction(titre.getAction());
+                 }
         }
-}
+    }
+
+}*/
 
 
 
 int main()
 
 {
-    /*srand (time(NULL));
+    srand (time(NULL));
+    map<string, long> stats;
+    stats["MON_COMPTEUR"]++;
+    auto start = chrono::high_resolution_clock::now();
     Date d1;
     cin>> d1;
     cout<<d1;
     Date d2;
     cin>>d2;
     d1.incrementerDate();
-    cout << d1 << endl;*/
+    cout << d1 << endl;
     vector<PrixJournalier> historique=PersistancePrixJournaliers::lirePrixJournaliersDUnFichier("C:\\Users\\hp\\Desktop\\enit\\S2\\MP\\prices_simple.csv");
    /* for(int i = 0; i < historique.size(); i++) {
         cout << historique[i] << endl;
     }*/  // afficher le vecteur historique
     BourseVector v(historique);
-    Titre(string a, float q);
-    Portefeuille(vector<Titre> t,double s);
-    TraderAleatoire("jack",)
 
-
- Simulation::executer(v, Trader& trader, d1, d2, 134411);
-   for (auto i :p.getTitres()){
-
-          cout<<i.getAction()<<"-" <<i.getQt()<<endl;
-          cout<<p.getTitres().size();
-          }
-
-   cout<<p.getSolde()<<endl;
-   int nb=0;
-   vector<Titre> titres = p.getTitres();
-
-   for (int i = 0; i < titres.size(); i++) {
-    cout << titres.at(i)<< endl;
-}
-    v.getPrixjournaliers();
-
-    //cout<<v.getDateAujourdhui();
-    //Date d0=v.getDateAujourdhui();
-
-    vector<string>vec= v.getActionsDisponiblesParAujourdhui();
-    cout <<vec.size()<<endl;
-    vector<Titre>vecT;
-
-      for (auto i :vec){
-
-           Titre t(i,1);
-           cout<<i<<endl;
-           vecT.push_back(t);
-          
-
-      }
-   Portefeuille p(vecT,200000);
-   Titre t1("IPGERT",1);
-   p.ajouterTitre(t1);
-   p.retirerTitre(&t1);
- 
-
-   for (auto i :p.getTitres()){
-
-          cout<<i.getAction()<<"-" <<i.getQt()<<endl;
-
-          }
-   cout<<p.getTitres().size();
-
-
-
-
-   cout<<nb++<<endl;
-
-
-   Trader T("maram", p);
-
-
-   Simulation
-   Simulation(Bourse& bourse, Trader& trader, d1, d2, double solde)*/
-
+    Titre t1("act", 123);
+    Titre t2("at", 12);
+    Titre t3("ac", 13);
+    vector<Titre> titres;
+    titres.push_back(t1);
+    titres.push_back(t1);
+    titres.push_back(t1);
+    Portefeuille p(titres, 133);
+    TraderAleatoire trader("jack",p);
+    auto stop = chrono::high_resolution_clock::now();
+    auto duration = chrono::duration_cast<chrono::microseconds>(stop - start);
+    stats["TEMPS_GET_ACTIONS_DISPO_AUJ_µs"]+=duration.count();
+    Simulation::executer(v,trader, d1, d2, 134411);
+    for(auto it:stats){   cout<<it.first<<"\t"<<it.second<<endl; }
     return 0;
 }
 
