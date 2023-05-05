@@ -152,6 +152,7 @@ class Bourse{
     virtual vector<PrixJournalier> getPrixJournaliersParAction(string action)=0;
     virtual vector<PrixJournalier> getPrixJournaliersParDate(Date date)=0;
     virtual vector<PrixJournalier> getPrixJournaliersParPrix(double prix)=0;
+    virtual vector<PrixJournalier> getPrixJournaliersParPrixAujourdhui(double prix)=0;
     virtual ~Bourse(){};
 
 };
@@ -240,7 +241,21 @@ class BourseVector: public Bourse
         if(!prixj.empty()){
            while (prixj[i].getDate() < dateAujourdhui && prixj.size()>i)
           {
-              if (prixj[i].getPrix() ==prix)
+              if (prixj[i].getPrix() <=prix)
+              {
+                prix_journaliers.push_back(prixj[i]);
+              }
+              i++;
+          }
+        return prix_journaliers;
+    }
+    vector<PrixJournalier> getPrixJournaliersParPrixAujourdhui(double prix){
+        vector<PrixJournalier> prix_journaliers;
+        int i=0;
+        if(!prixj.empty()){
+           while (prixj[i].getDate()= dateAujourdhui && prixj.size()>i)
+          {
+              if (prixj[i].getPrix() <=prix)
               {
                 prix_journaliers.push_back(prixj[i]);
               }
@@ -250,8 +265,19 @@ class BourseVector: public Bourse
     }
    }
     vector<PrixJournalier> getPrixJournaliersDisponiblesParAujourdhui(){
-        vector<PrixJournalier> prj= getPrixJournaliersParDate(dateAujourdhui);
-        return prj;
+        vector<PrixJournalier> prix_journaliers;
+        int i=0;
+        if(!prixj.empty()){
+         while ( prixj.size()>i)
+        {
+            if (prixj[i].getDate() == dateAujourdhui)
+            {
+                prix_journaliers.push_back(prixj[i]);
+            }
+             i++;
+        }
+        return prix_journaliers;
+    }
     }
 
 };
@@ -263,6 +289,9 @@ class Transaction{
         string nomAction;
         int quantite;
      public:
+        TypeTransaction getType(){return type;}
+        string getNomAction(){return nomAction;}
+        int getQuantite(){return quantite;}
         Transaction(TypeTransaction t):type(t){};
         Transaction(TypeTransaction t,string a,int q):type(t),nomAction(a),quantite(q){};
 };
@@ -293,9 +322,8 @@ class Portefeuille{
        void retirerMontant(double montant);
 };
 
-void Portefeuille::ajouterTitre(Titre titre){
-      titres.push_back(titre);
-
+void Portefeuille::ajouterTitre(Titre titre) {
+  titres.push_back(titre);
 }
 void Portefeuille::retirerTitre(Titre* titre) {
     for (auto it = titres.begin(); it != titres.end(); ++it) {
@@ -333,66 +361,150 @@ class TraderAleatoire: public Trader{
 
 };
 Transaction Trader::choisirTransaction(const Bourse& bourse, const Portefeuille &portefeuille){
-      vector<PrixJournalier> PrixJournaliersDisponibles = bourse.getPrixJournaliersParDate(bourse.getDateAujourdhui());
-      vector<string> actionsDeBourse=bourse.getActionsDisponiblesParDate(bourse.getDateAujourdhui());
-      vector<Titre> titresTrader=portfeuille.getTitres()
-      if (PrixJournaliersDisponibles.empty()){
-        Transaction transaction(rienfaire);
-      }
-      else{
-        if (titresTrader.empty()){
-                do{
-                    int index = rand() % PrixJournaliersDisponibles.size();
-                    PrixJournalier pj= PrixJournaliersDisponibles[index];
-                    double prixAction= pj.getPrix();
-                    string action =pj.getAction();
-                }while(prixAction>Portefeuille.getSolde());
-                double quantite= floor(getPortefeuille.getSolde()/prixAction);
-                Transaction transaction(acheter,action,quantite);
-         }
+    vector<PrixJournalier> prixJournaliersDisponiblesDansLaBourseAujourdhui=bourse.getPrixJournaliersDisponiblesParAujourdhui();
+    vector<Titre> titresDeTrader=portfeuille.getTitres();
+    vector<PrixJournalier> titresDeTraderDisponiblesDansLaBourseAujourdhui;
+    vector<PrixJournalier> prixJournaliersDisponiblesaAcheter =getPrixJournaliersParPrixAujourdhui(portefeuille.getSolde());
+    for(auto i :prixJournaliersDisponiblesDansLaBourseAujourdhui){
+        for (auto j:titresDeTrader){
+            if(i.getAction()==j.getAction()){
+                titresDeTraderDisponiblesDansLaBourseAujourdhui.push_back(i);
+            }
+        }
+    }
+    if (titresDeTrader.empty()){
+        if(prixJournaliersDisponiblesaAcheter.empty()){
+            Transaction transaction(rienfaire);
+            return Transaction;
+        }
         else{
-
-              vector<string> actionsDeTrader=titresTrader.getAction();
-              vector<PrixJournalier> prixJournalierDisponibleAVendre;
-              for (auto i:PrixJournaliersDisponibles){
-                for (auto j:actionsDeTrader){
-                    if (i.getAction()==j){
-                        prixJournalierDisponibleAVendre.push_back(i);
+           int index = rand() % prixJournaliersDisponiblesaAcheter.size();
+           PrixJournalier pj= prixJournaliersDisponiblesaAcheter[index];
+           double prixAction= pj.getPrix();
+           string action =pj.getAction();
+           double quantite= floor(portefeuille.getSolde()/prixAction);
+           Transaction transaction(acheter,action,quantite);
+           Titre t(action, quantite);
+           trader.getPortefeuille().ajouterTitre(t);
+           trader.getPortefeuille().retirerMontant(prixAction*quantite);
+           return Transaction;
+        }
+    }
+    else{
+            if(portefeuille.getSolde()==0){
+                 if(titresDeTraderDisponiblesDansLaBourseAujourdhui.empty()){
+                     Transaction transaction(rienfaire);
+                     return Transaction;
+                 }
+                 else{
+                    int index = rand() % titresDeTraderDisponiblesDansLaBourseAujourdhui.size();
+                    PrixJournalier prixJournalierAvendre=titresDeTraderDisponiblesDansLaBourseAujourdhui[index];
+                    for(Titre i: titresDeTrader){
+                          if (i.getAction()== prixJournalierAvendre.getAction()){
+                             double quantiteAvendre = 1.0 + static_cast<double>(rand()) / RAND_MAX * (i.getQt());
+                             break;}
                     }
-                }
-              }
-              if (prixJournalierDisponibleAVendre.empty()){
-                Transaction transaction(rienfaire);
-              }
-              else{
+                    string action =prixJournalierAvendre.getAction();
+                    double prixAction = prixJournalierAvendre.getPrix();
+                    Titre titreAvendre(action,quantiteAvendre);
+                    trader.getPortefeuille().retirerTitre(&titreAvendre);
+                    trader.getPortefeuille().deposerMontant(prixAction*quantiteAvendre);
+                    Transaction transaction(vendre,action,quantiteAvendre);
+                    return Transaction;
+                 }
+            }
+            else{
                 TypeTransaction type = static_cast<TypeTransaction>(rand()%3);
                 if(type==acheter){
-                    do{
-                      int index = rand() % prixJournalierDisponibleAVendre.size();
-                      PrixJournalier pj= prixJournalierDisponibleAVendre[index];
+                    if(prixJournaliersDisponiblesaAcheter.empty()){
+                        do{
+                          TypeTransaction type = static_cast<TypeTransaction>(rand()%3);}while(type=acheter);
+                        if (type==vendre){
+                            if(titresDeTraderDisponiblesDansLaBourseAujourdhui.empty()){
+                                Transaction transaction(rienfaire);
+                                return Transaction;}
+                            }
+                            int index = rand() % titresDeTraderDisponiblesDansLaBourseAujourdhui.size();
+                            PrixJournalier prixJournalierAvendre=titresDeTraderDisponiblesDansLaBourseAujourdhui[index];
+                            for(Titre i: titresDeTrader){
+                                if (i.getAction()== prixJournalierAvendre.getAction()){
+                                  double quantiteAvendre = 1.0 + static_cast<double>(rand()) / RAND_MAX * (i.getQt());
+                                  break;}
+                            }
+                            string action =prixJournalierAvendre.getAction();
+                            double prixAction = prixJournalierAvendre.getPrix();
+                            Titre titreAvendre(action,quantiteAvendre);
+                            trader.getPortefeuille().retirerTitre(&titreAvendre);
+                            trader.getPortefeuille().deposerMontant(prixAction*quantiteAvendre);
+                            Transaction transaction(vendre,action,quantiteAvendre);
+                            return Transaction;
+                            }
+                        else{
+                        Transaction transaction(rienfaire);
+                        return Transaction;}
+                    }
+                    else{
+                      int index = rand() % prixJournaliersDisponiblesaAcheter.size();
+                      PrixJournalier pj= prixJournaliersDisponiblesaAcheter[index];
                       double prixAction= pj.getPrix();
                       string action =pj.getAction();
-                    }while(prixAction>portefeuille.getSolde());
-                    double quantite= floor(portefeuille.getSolde()/prixAction);
-                    Transaction transaction(acheter,action,quantite);
-                }
-                else if (type==vendre){
-                        int index = rand() % titresTrader.size();
-                        Titre titreAvendre=titresTrader[index];
-                        for(PrixJournalier pj: PrixJournaliersDisponibles){
-                          if (titreAvendre.getAction()== pj.getAction()){
-                             double quantiteAvendre = 1.0 + static_cast<double>(rand()) / RAND_MAX * (titreAvendre.getQt());
-                             break;}
-                        }
-                        Transaction transaction(vendre,titreAvendre.getAction(),quantiteAvendre);
+                      double quantite= floor(portefeuille.getSolde()/prixAction);
+                      Transaction transaction(acheter,action,quantite);
+                      Titre t(action, quantite);
+                      trader.getPortefeuille().ajouterTitre(t);
+                      trader.getPortefeuille().retirerMontant(prixAction*quantite);
+                      return Transaction;
+                      }
+                   }
+                   else if (type==vendre){
+                              if(titresDeTraderDisponiblesDansLaBourseAujourdhui.empty()){
+                                   do{
+                                       TypeTransaction type = static_cast<TypeTransaction>(rand()%3);}while(type=vendre);
+                                   if (type==acheter){
+                                       if(prixJournaliersDisponiblesaAcheter.empty()){
+                                           Transaction transaction(rienfaire);
+                                           return Transaction;
+                                       }
+                                       int index = rand() % prixJournaliersDisponiblesaAcheter.size();
+                                       PrixJournalier pj= prixJournaliersDisponiblesaAcheter[index];
+                                       double prixAction= pj.getPrix();
+                                       string action =pj.getAction();
+                                       double quantite= floor(portefeuille.getSolde()/prixAction);
+                                       Transaction transaction(acheter,action,quantite);
+                                       Titre t(action, quantite);
+                                       trader.getPortefeuille().ajouterTitre(t);
+                                       trader.getPortefeuille().retirerMontant(prixAction*quantite);
+                                       return Transaction;
+                                       }
+                                     else{
+                                         Transaction transaction(rienfaire);
+                                         return Transaction;}
+                               }
+                               else{
+                                  int index = rand() % titresDeTraderDisponiblesDansLaBourseAujourdhui.size();
+                                  PrixJournalier prixJournalierAvendre=titresDeTraderDisponiblesDansLaBourseAujourdhui[index];
+                                  for(Titre i: titresDeTrader){
+                                         if (i.getAction()== prixJournalierAvendre.getAction()){
+                                              double quantiteAvendre = 1.0 + static_cast<double>(rand()) / RAND_MAX * (i.getQt());
+                                              break;}
+                                              }
+                                  string action =prixJournalierAvendre.getAction();
+                                  double prixAction = prixJournalierAvendre.getPrix();
+                                  Titre titreAvendre(action,quantiteAvendre);
+                                  trader.getPortefeuille().retirerTitre(&titreAvendre);
+                                  trader.getPortefeuille().deposerMontant(prixAction*quantiteAvendre);
+                                  Transaction transaction(vendre,action,quantiteAvendre);
+                                  return Transaction;
+                 }
 
               }
                 else{
                     Transaction transaction(rienfaire);
+                    return Transaction;
                 }
-              }
-      return transaction;
-}
+            }
+      }
+
 
 
 class Simulation {
@@ -405,66 +517,30 @@ class Simulation {
       static void executer(Bourse& bourse, Trader& trader, Date dateDebut, Date dateFin, double solde);
 };
 void Simulation::executer(Bourse& bourse, Trader& trader, Date dateDebut, Date dateFin, double solde){
-    Date dateCourante=dateDebut ;
+    bourse.setDateAujourdhui(dateDebut);
     int nbrTxParJour=0;
-    while (dateCourante<bourse.getDateAujourdhui() && dateCourante<dateFin){
+    while (bourse.getDateAujourdhui()<dateFin){
         do{
-            TypeTransaction choix=trader.choisirTransaction(bourse,trader.getPortefeuille());
-            if(choix==acheter){
-                vector<PrixJournalier> PrixJournaliersDisponibles = bourse.getPrixJournaliersParDate(dateCourante);
-                double prixAction;
-                string action;
-                do{
-                    int index = rand() % PrixJournaliersDisponibles.size();
-                    PrixJournalier pj= PrixJournaliersDisponibles[index];
-                    prixAction= pj.getPrix();
-                    action =pj.getAction();
-                }while(prixAction>trader.getPortefeuille().getSolde());
-                double quantite= floor(trader.getPortefeuille().getSolde()/prixAction);
-                Titre t(action, quantite);
-                trader.getPortefeuille().ajouterTitre(t);
-                trader.getPortefeuille().retirerMontant(prixAction*quantite);
-                nbrTxParJour++;
-            }
-            else if(choix==vendre){
-                vector<Titre> titresAvendre = trader.getPortefeuille().getTitres();
-                vector<PrixJournalier> PrixJournaliersDisponibles = bourse.getPrixJournaliersParDate(dateCourante);
-                if(!titresAvendre.empty()){
-                 for(PrixJournalier pj: PrixJournaliersDisponibles){
-                    int index = rand() % titresAvendre.size();
-                    Titre titreAvendre=titresAvendre[index];
-                    if (titreAvendre.getAction()== pj.getAction()){
-                          double quantiteAvendre = 1.0 + static_cast<double>(rand()) / RAND_MAX * (titreAvendre.getQt());
-                          double prixAction = pj.getPrix();
-                          trader.getPortefeuille().retirerTitre(&titreAvendre);
-                          trader.getPortefeuille().deposerMontant(prixAction*quantiteAvendre);
-                          nbrTxParJour++;
-                          break;
-                 }
-                }
-                }
-            else{
-                dateAujourdhui.incrementerDate();
-            }
+            Transaction transaction=trader.choisirTransaction(bourse,trader.getPortefeuille());
+            nbrTxParJour++;
+            if(transaction.getType()==rienfaire){
+                     bourse.setDateAujourdhui(dateAujourdhui.incrementerDate());}
         }while(nbrTxParJour < 100);
-
+        bourse.setDateAujourdhui(dateAujourdhui.incrementerDate());
     }
-   /* vector<PrixJournalier> prixJournaliersDisponiblesParAujourdhui = bourse.getPrixJournaliersDisponiblesParAujourdhui();
-    for(Titre titre : trader.getPortefeuille().getTitres()){
-             for(PrixJournalier pj: prixJournaliersDisponiblesParAujourdhui){
-                 if(titre.getAction()==pj.getAction()){
-                       double prixAction = pj.getPrix();
+    vector<Titre> titresDeTrader=trader.getPortefeuille().getTitres()
+    for(Titre titre : titresDeTrader){
+             vector<PrixJournalier> prixJournaliersDisponibles = bourse.getPrixJournaliersDisponiblesParDate(bourse.getDateAujourdhui());
+             for (int i = prixJournaliersDisponibles.size() - 1; i >= 0; i--) {
+                if (prixJournaliersDisponibles[i].getAction() == titre.getAction()) {
+                       double prixAction = prixJournaliersDisponibles[i].getPrix();
                        double quantite =titre.getQt();
                        trader.getPortefeuille().retirerTitre(&titre);
                        trader.getPortefeuille().deposerMontant(prixAction*quantite);}
-                 else
-                 {
-                      vector<PrixJournalier> PrixJournaliersParAction=getPrixJournaliersParAction(titre.getAction());
-                 }
         }
     }
 
-}*/
+}
 
 
 
@@ -504,5 +580,3 @@ int main()
     for(auto it:stats){   cout<<it.first<<"\t"<<it.second<<endl; }
     return 0;
 }
-
-
