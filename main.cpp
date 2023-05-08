@@ -11,6 +11,7 @@
 
 using namespace std;
 
+
 class Date{
     public:
      int jour;
@@ -55,7 +56,7 @@ void Date:: incrementerDate()
 {
     int limiteJour = 31;
     if (mois == 2) {
-        if (annee % 4 == 0 && annee % 100 != 0) || annee % 400 == 0) {
+        if (annee % 4 == 0 && annee % 100 != 0 || annee % 400 == 0) {
             limiteJour = 29;
         } else {
             limiteJour = 28;
@@ -74,11 +75,7 @@ void Date:: incrementerDate()
         annee++;
     }
 }
-Date::Date(int j,int m,int a):jour(j), mois(m), annee(a){
-    if(!testDate(*this)){
-        exit(1);
-    }
-}
+Date::Date(int j,int m,int a):jour(j), mois(m), annee(a){}
 
 
 class PrixJournalier {
@@ -151,7 +148,7 @@ class Bourse{
     Date getDateAujourdhui() const{ return dateAujourdhui;}
     void setDateAujourdhui(Date date){dateAujourdhui=date;}
     virtual vector<PrixJournalier> getPrixJournaliersDisponiblesParAujourdhui()const=0;
-    virtual vector<string> getActionsDisponiblesParAujourdhui()const=0;
+    virtual vector<string>getActionsDisponiblesParAujourdhui()const=0;
     virtual vector<string> getActionsDisponiblesParDate(Date date)const=0;
     virtual vector<string> getActionsDisponiblesParPrix(double prix)const=0;
     virtual vector<PrixJournalier> getPrixJournaliersParAction(string action)const=0;
@@ -242,17 +239,21 @@ class BourseVector: public Bourse
     }
   PrixJournalier getPrixJournalierParActionAujourdhui(string action)const{
         int i=0;
+        PrixJournalier pj;
         if(!prixj.empty()){
         while (prixj[i].getDate() == dateAujourdhui && prixj.size()>i)
         {
 
             if (prixj[i].getAction()==action)
             {
-                return prixj[i];
+                pj.setAction(prixj[i].getAction());
+                pj.setPrix(prixj[i].getPrix());
+                pj.setDate(prixj[i].getDate());
             }
              i++;
         }
     }
+    return pj;
     }
    vector<PrixJournalier> getPrixJournaliersParPrix(double prix)const{
         vector<PrixJournalier> prix_journaliers;
@@ -296,8 +297,8 @@ class BourseVector: public Bourse
             }
              i++;
         }
-        return prix_journaliers;
     }
+          return prix_journaliers;
     }
 
 
@@ -334,7 +335,7 @@ class Portefeuille{
        double solde;
    public:
 
-       Portefeuille(vector<Titre> t,double s):titres(t),solde(s){};
+       Portefeuille(vector<Titre> t, double s):titres(t), solde(s){};
        double getSolde()const{return solde;};
        void setSolde(double s){solde=s;};
        vector<Titre> getTitres()const{return titres;};
@@ -373,7 +374,10 @@ class Trader{
         Trader(){};
         virtual ~Trader() {};
     };
-
+ 
+class TraderAleatoire: public Trader{
+  public:
+Transaction choisirTransaction(const Bourse& bourse, const Portefeuille &portefeuille)
 
 class TraderAleatoire: public Trader{
   public:
@@ -488,17 +492,18 @@ Transaction choisirTransaction(const Bourse& bourse, const Portefeuille &portefe
                                        Transaction transaction(ACHETER,action,quantite);
                                        return transaction;
                                        }
+                                   }
                                      else{
                                          Transaction transaction(RIEN_FAIRE);
                                          return transaction;}
-                               }
                               }
                                else{
                                   int index = rand() % titresDeTraderDisponiblesDansLaBourseAujourdhui.size();
                                   PrixJournalier prixJournalierAvendre=titresDeTraderDisponiblesDansLaBourseAujourdhui[index];
+                                  int quantiteAvendre;
                                   for(Titre i: titresDeTrader){
                                          if (i.getAction()== prixJournalierAvendre.getAction()){
-                                              int quantiteAvendre = 1.0 + static_cast<int>(rand()) / RAND_MAX * (i.getQt());
+                                              quantiteAvendre = 1.0 + static_cast<int>(rand()) / RAND_MAX * (i.getQt());
                                               break;}
                                               }
                                   string action =prixJournalierAvendre.getAction();
@@ -528,6 +533,7 @@ private:
 
 public:
     static void executer(Bourse& bourse, Trader& trader, Date dateDebut, Date dateFin, double solde){
+        vector<Titre> Titres;
         Portefeuille portefeuille(solde);
         bourse.setDateAujourdhui(dateDebut);
         int nbrTxParJour=0;
@@ -536,7 +542,7 @@ public:
                 Transaction transaction = trader.choisirTransaction(bourse, portefeuille);
                 nbrTxParJour++;
                 if (transaction.getType() == RIEN_FAIRE){
-                    bourse.setDateAujourdhui(bourse.getDateAujourdhui().incrementerDate());
+                    bourse.getDateAujourdhui().incrementerDate();
                 } else if (transaction.getType() == ACHETER){
                     double prixAction = bourse.getPrixJournalierParActionAujourdhui(transaction.getNomAction()).getPrix();
                     int quantite = transaction.getQuantite();
@@ -553,7 +559,7 @@ public:
                 }
             } while(nbrTxParJour < 100);
             nbrTxParJour = 0;
-            bourse.setDateAujourdhui(bourse.getDateAujourdhui().incrementerDate());
+            bourse.getDateAujourdhui().incrementerDate();
         }
         for (Titre& titre : portefeuille.getTitres()){
             for (int i = bourse.getPrixJournaliersParAction(titre.getAction()).size() - 1; i >= 0; i--){
@@ -572,14 +578,15 @@ public:
 
 class Test{
 public:
-    bool testDate(Date date){
+    Test(){};
+    bool testDate(Date d){
     bool DateValide = true;
     if (d.annee < 0 || d.mois < 1 || d.mois > 12 || d.jour < 1) {
         DateValide = false;
     } else {
         int limiteJour = 31;
         if (d.mois == 2) {
-            if (d.annee % 4 == 0 && annee % 100 != 0) || annee % 400 == 0) {
+            if (d.annee % 4 == 0 && d.annee % 100 != 0 || d.annee % 400 == 0) {
                 limiteJour = 29;
             } else {
                 limiteJour = 28;
@@ -606,7 +613,7 @@ public:
 int main()
 
 {
-  /*  srand (time(NULL));
+    srand (time(NULL));
     map<string, long> stats;
     stats["MON_COMPTEUR"]++;
     auto start = chrono::high_resolution_clock::now();
@@ -621,21 +628,21 @@ int main()
    /* for(int i = 0; i < historique.size(); i++) {
         cout << historique[i] << endl;
     }*/  // afficher le vecteur historique
-    /*BourseVector v(historique);
+    BourseVector* v= new BourseVector(historique);
 
-    Titre t1("act", 123);
+    /*Titre t1("act", 123);
     Titre t2("at", 12);
     Titre t3("ac", 13);
-    vector<Titre> titres;
+    vector<Titre> titres;https://chat.openai.com/chat
     titres.push_back(t1);
     titres.push_back(t1);
-    titres.push_back(t1);
-    Portefeuille p(titres, 133);
-    TraderAleatoire trader("jack",p);
+    titres.push_back(t1);*/
+    Portefeuille p( 133);
+    TraderAleatoire* trader= new TraderAleatoire();
     auto stop = chrono::high_resolution_clock::now();
     auto duration = chrono::duration_cast<chrono::microseconds>(stop - start);
     stats["TEMPS_GET_ACTIONS_DISPO_AUJ_µs"]+=duration.count();
-    Simulation::executer(v,trader, d1, d2, 134411);
-    for(auto it:stats){   cout<<it.first<<"\t"<<it.second<<endl; }/*
+    Simulation::executer(*v,*trader, d1, d2, 134411);
+    for(auto it:stats){   cout<<it.first<<"\t"<<it.second<<endl; }
     return 0;
 }
